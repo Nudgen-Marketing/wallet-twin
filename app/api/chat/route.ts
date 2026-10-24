@@ -22,7 +22,12 @@ export async function POST(request: NextRequest) {
   const parsed = await parseChatRequest(await readJson(request));
   if ("error" in parsed) return fail(parsed.error, 400);
 
-  const chat = await buildTwinChat({ address: session.address, audience: "owner", userText: parsed.userText });
+  const chat = await buildTwinChat({
+    address: session.address,
+    audience: "owner",
+    userText: parsed.userText,
+    saveFacts: !session.demo,
+  });
   const result = streamText({
     model: chat.model,
     system: chat.system,

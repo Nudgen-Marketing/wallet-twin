@@ -3,7 +3,7 @@
 import { DAppKitProvider, useCurrentAccount, useDAppKit } from "@mysten/dapp-kit-react";
 import { ConnectButton } from "@mysten/dapp-kit-react/ui";
 import { formatAddress, normalizeSuiAddress } from "@mysten/sui/utils";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { fetchSession, requestNonce, signOut, verifySignIn } from "@/lib/wallet/auth-client";
 import { dAppKit } from "@/lib/wallet/dapp-kit";
@@ -26,21 +26,28 @@ function describeError(error: unknown): string {
 
 function SignInFlow() {
   const router = useRouter();
+  const pathname = usePathname();
   const kit = useDAppKit();
   const account = useCurrentAccount();
   const [sessionAddress, setSessionAddress] = useState<string | null>(null);
+  const [isDemo, setIsDemo] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
 
+  // Re-read the session on navigation: demo sign-in and sign-out happen outside this panel.
   useEffect(() => {
     let isCurrent = true;
     fetchSession()
-      .then((session) => isCurrent && setSessionAddress(session.address))
+      .then((session) => {
+        if (!isCurrent) return;
+        setSessionAddress(session.address);
+        setIsDemo(session.demo);
+      })
       .catch(() => isCurrent && setSessionAddress(null));
     return () => {
       isCurrent = false;
     };
-  }, []);
+  }, [pathname]);
 
   const walletAddress = account ? normalizeSuiAddress(account.address) : null;
   // The server session is the source of truth; a different connected wallet means "switch account".
@@ -73,6 +80,7 @@ function SignInFlow() {
     try {
       await signOut();
       setSessionAddress(null);
+      setIsDemo(false);
       if (account) await kit.disconnectWallet();
       router.refresh();
     } catch (caught: unknown) {
@@ -90,6 +98,7 @@ function SignInFlow() {
             <span className="font-mono text-xs text-ink-soft" title={sessionAddress}>
               <span className="mr-1.5 inline-block size-2 rounded-full bg-gain align-middle" aria-hidden />
               {formatAddress(sessionAddress)}
+              {isDemo && <span className="ml-2 rounded-sm bg-signal px-1.5 py-0.5 text-signal-ink">Demo</span>}
             </span>
             <button
               type="button"

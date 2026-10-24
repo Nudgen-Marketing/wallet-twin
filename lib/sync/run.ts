@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { rememberTwin, type TwinMemoryEntry } from "@/lib/memory";
+import { memoryBackendName, rememberTwin, type TwinMemoryEntry } from "@/lib/memory";
 import { getAddressHistory, getHistoryRange } from "@/lib/tatum";
 import { analyzeTransactions } from "@/lib/trades/analyze";
 import { loadTwinSnapshot, storeActivities } from "@/lib/twin/data";
@@ -75,9 +75,14 @@ export async function runSync(runId: string, address: string): Promise<void> {
     await update(runId, "twin", progress);
 
     const snapshot = await loadTwinSnapshot(address);
-    const hasProfile = (await db.memoryWrite.count({ where: { address, type: "profile", status: { not: "failed" } } })) > 0;
+    const hasProfile =
+      (await db.memoryWrite.count({
+        where: { address, type: "profile", status: { not: "failed" }, backend: memoryBackendName() },
+      })) > 0;
     const entries: TwinMemoryEntry[] = [
-      ...tradeMemories(fresh, snapshot.stats),
+      // Newest trades overall (capped); the ledger skips any already stored on this backend,
+      // so a backend switch back-fills and a normal re-sync adds only what's new.
+      ...tradeMemories(snapshot.activities, snapshot.stats),
       ...milestoneMemories(snapshot.activities, snapshot.stats),
     ];
     // Only regenerate the narrative when something changed, so an idle re-sync writes nothing.

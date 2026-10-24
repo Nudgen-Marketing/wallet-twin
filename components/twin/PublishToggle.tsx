@@ -8,9 +8,10 @@ import { apiCall } from "@/lib/http/client";
 interface PublishToggleProps {
   address: string;
   initialPublished: boolean;
+  isDemo?: boolean;
 }
 
-export function PublishToggle({ address, initialPublished }: PublishToggleProps) {
+export function PublishToggle({ address, initialPublished, isDemo = false }: PublishToggleProps) {
   const router = useRouter();
   const [published, setPublished] = useState(initialPublished);
   const [isSaving, setIsSaving] = useState(false);
@@ -55,7 +56,8 @@ export function PublishToggle({ address, initialPublished }: PublishToggleProps)
         <button
           type="button"
           onClick={toggle}
-          disabled={isSaving}
+          disabled={isSaving || (isDemo && published)}
+          title={isDemo && published ? "Demo twins stay public so everyone can try them." : undefined}
           className={`rounded-sm px-4 py-2 font-mono text-xs uppercase tracking-widest transition-colors duration-150 disabled:opacity-50 ${
             published ? "border border-ink hover:bg-ink hover:text-paper" : "bg-ink text-paper hover:bg-signal hover:text-signal-ink"
           }`}

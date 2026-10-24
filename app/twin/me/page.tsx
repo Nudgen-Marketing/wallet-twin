@@ -65,7 +65,7 @@ async function MyTwin() {
     <>
       <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
         <h1 className="font-display text-5xl font-black tracking-tight sm:text-6xl">
-          Twin of <span className="font-mono text-3xl font-medium sm:text-4xl">{formatAddress(session.address)}</span>
+          Twin of <span className="block font-mono text-3xl font-medium sm:inline sm:text-4xl">{formatAddress(session.address)}</span>
         </h1>
         <div className="flex items-center gap-3">
           <MemoryBadge backend={memoryBackendName()} />
@@ -77,9 +77,17 @@ async function MyTwin() {
       <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <div className="space-y-10 lg:sticky lg:top-8 lg:self-start">
           <StatsPanel stats={snapshot.stats} historyFromMs={state.historyFromMs?.getTime() ?? null} />
-          <PublishToggle address={session.address} initialPublished={published} />
+          <PublishToggle address={session.address} initialPublished={published} isDemo={session.demo} />
         </div>
-        <TwinChat api="/api/chat" audience="owner" suggestions={SUGGESTIONS} twinName="Your twin" />
+        <div>
+          {session.demo && (
+            <p className="mb-4 border-l-4 border-signal pl-3 text-sm text-ink-soft">
+              Demo mode: you&apos;re exploring a seeded mainnet wallet. Chat works, but nothing you say is remembered,
+              because this demo is shared with every visitor.
+            </p>
+          )}
+          <TwinChat api="/api/chat" audience="owner" suggestions={SUGGESTIONS} twinName="Your twin" />
+        </div>
       </div>
     </>
   );

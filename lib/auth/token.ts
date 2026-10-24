@@ -6,6 +6,8 @@ const AUDIENCE = "wallettwin:session";
 
 export interface Session {
   address: string;
+  /** Shared demo login for a seeded wallet: read-mostly, never stores chat facts. */
+  demo?: boolean;
 }
 
 function keyFrom(secret: string): Uint8Array {
@@ -18,7 +20,7 @@ export async function createSessionToken(
   now: Date = new Date(),
 ): Promise<string> {
   const issuedAt = Math.floor(now.getTime() / 1000);
-  return new SignJWT({})
+  return new SignJWT(session.demo ? { demo: true } : {})
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(session.address)
     .setIssuer(ISSUER)
@@ -41,7 +43,8 @@ export async function readSessionToken(
       algorithms: ["HS256"],
       currentDate: now,
     });
-    return payload.sub ? { address: payload.sub } : null;
+    if (!payload.sub) return null;
+    return payload.demo === true ? { address: payload.sub, demo: true } : { address: payload.sub };
   } catch {
     return null;
   }

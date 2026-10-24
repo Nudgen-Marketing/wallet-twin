@@ -76,3 +76,19 @@ describe("recallTwin privacy", () => {
     expect(memories).toEqual([]);
   });
 });
+
+describe("backend switch", () => {
+  test("rows written by another backend don't block writes to the active one", async () => {
+    const address = freshAddress();
+    await db.memoryWrite.create({
+      data: { address, key: "profile:r1", type: "profile", text: "[profile] old", backend: "walrus", status: "done" },
+    });
+
+    const outcome = await rememberTwin(address, [ENTRIES[0]]);
+
+    expect(outcome).toEqual({ submitted: 1, skipped: 0, failed: 0 });
+    expect(await db.memoryWrite.findUnique({ where: { address_key: { address, key: "profile:r1" } } })).toMatchObject({
+      backend: "local",
+    });
+  });
+});

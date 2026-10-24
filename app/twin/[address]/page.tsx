@@ -38,7 +38,7 @@ async function PublicTwin({ params }: { params: PageProps<"/twin/[address]">["pa
   return (
     <>
       <h1 className="mt-3 font-display text-5xl font-black tracking-tight sm:text-6xl">
-        Twin of <span className="font-mono text-3xl font-medium sm:text-4xl">{formatAddress(address)}</span>
+        Twin of <span className="block font-mono text-3xl font-medium sm:inline sm:text-4xl">{formatAddress(address)}</span>
       </h1>
       {twin.profile && (
         <p className="mt-6 max-w-3xl font-display text-2xl leading-snug sm:text-3xl">

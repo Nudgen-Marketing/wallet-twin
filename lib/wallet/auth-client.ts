@@ -1,6 +1,6 @@
 import { apiCall } from "@/lib/http/client";
 
-export function fetchSession(): Promise<{ address: string | null }> {
+export function fetchSession(): Promise<{ address: string | null; demo: boolean }> {
   return apiCall("/api/auth/session", { cache: "no-store" });
 }
 

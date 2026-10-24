@@ -66,8 +66,10 @@ export async function buildTwinChat(input: {
   address: string;
   audience: Audience;
   userText: string;
+  /** False for shared demo sessions: recall still works, nothing new is remembered. */
+  saveFacts?: boolean;
 }): Promise<TwinChat> {
-  const { address, audience, userText } = input;
+  const { address, audience, userText, saveFacts = true } = input;
   const [snapshot, recalled, profile] = await Promise.all([
     loadTwinSnapshot(address),
     // Owner [chat] facts are recalled by the MemWal middleware itself when Walrus is on.
@@ -101,7 +103,7 @@ export async function buildTwinChat(input: {
       ...config,
       namespace: namespaceFor(address, "chat"),
       maxMemories: 5,
-      autoSave: true,
+      autoSave: saveFacts,
       onSaveError: (error: unknown) => console.error("[chat] memwal save failed", error),
       onRecallError: (error: unknown) => console.error("[chat] memwal recall failed", error),
     }) as LanguageModel & { flush?: () => Promise<void> };
@@ -112,6 +114,7 @@ export async function buildTwinChat(input: {
     model: base,
     system,
     afterResponse: async () => {
+      if (!saveFacts) return;
       const facts = extractStatedFacts(userText);
       if (facts.length === 0) return;
       await rememberTwin(

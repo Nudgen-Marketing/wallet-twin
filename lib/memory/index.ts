@@ -67,13 +67,19 @@ const chunk = <T>(items: T[], size: number): T[][] =>
 
 /** Stores new entries for a twin, skipping keys already stored or in flight. */
 export async function rememberTwin(address: string, entries: TwinMemoryEntry[]): Promise<RememberOutcome> {
+  const store = memory();
+  // Dedupe per backend: switching from the local stand-in to Walrus re-writes everything once.
   const existing = await db.memoryWrite.findMany({
-    where: { address, key: { in: entries.map((entry) => entry.key) }, status: { not: "failed" } },
+    where: {
+      address,
+      key: { in: entries.map((entry) => entry.key) },
+      status: { not: "failed" },
+      backend: store.name,
+    },
     select: { key: true },
   });
   const seen = new Set(existing.map((row) => row.key));
   const fresh = entries.filter((entry) => !seen.has(entry.key));
-  const store = memory();
   let failed = 0;
 
   for (const batch of chunk(fresh, MAX_BULK_ITEMS)) {

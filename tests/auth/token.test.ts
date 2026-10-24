@@ -35,3 +35,13 @@ describe("session tokens", () => {
     await expect(readSessionToken("not.a.jwt", SECRET, NOW)).resolves.toBeNull();
   });
 });
+
+describe("demo sessions", () => {
+  test("carry the demo flag; normal sessions don't", async () => {
+    const demo = await createSessionToken({ address: ADDRESS, demo: true }, SECRET, NOW);
+    const normal = await createSessionToken({ address: ADDRESS }, SECRET, NOW);
+
+    await expect(readSessionToken(demo, SECRET, NOW)).resolves.toEqual({ address: ADDRESS, demo: true });
+    await expect(readSessionToken(normal, SECRET, NOW)).resolves.toEqual({ address: ADDRESS });
+  });
+});

@@ -36,7 +36,7 @@ export function LeaderboardTable({ rows, compact = false }: LeaderboardTableProp
             href={`/twin/${row.address}`}
             className="group grid grid-cols-[3rem_1fr] items-baseline gap-x-4 gap-y-2 py-5 transition-colors duration-150 hover:bg-paper-deep/60 sm:grid-cols-[4rem_minmax(0,1fr)_repeat(3,7rem)]"
           >
-            <span className="font-display text-4xl font-black tabular-nums leading-none text-rule transition-colors duration-150 group-hover:text-signal">
+            <span className="font-display text-4xl font-black tabular-nums leading-none text-ink-soft transition-colors duration-150 group-hover:text-signal">
               {row.rank}
             </span>
             <span className="min-w-0">

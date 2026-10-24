@@ -15,6 +15,8 @@ export async function POST(request: NextRequest) {
   const parsed = bodySchema.safeParse(await readJson(request));
   if (!parsed.success) return fail("Malformed request.", 400);
 
+  if (session.demo && !parsed.data.publish) return fail("Demo twins stay public so everyone can try them.", 403);
+
   if (parsed.data.publish) {
     const synced = await db.syncState.findUnique({ where: { address: session.address } });
     if (!synced) return fail("Sync your wallet before publishing your twin.", 409);

@@ -21,6 +21,8 @@ const envSchema = z.object({
   MEMWAL_PRIVATE_KEY: optionalSecret,
   MEMWAL_ACCOUNT_ID: optionalSecret,
   MEMWAL_SERVER_URL: z.url().default("https://relayer.memory.walrus.xyz"),
+  // Comma-separated seeded wallets judges can explore without a wallet (see lib/demo.ts).
+  DEMO_WALLETS: z.string().optional(),
   ANTHROPIC_API_KEY: optionalSecret,
   ANTHROPIC_MODEL: z.string().min(1).default("claude-sonnet-5-5"),
   // Required by Anthropic for API keys that aren't scoped to a single workspace.

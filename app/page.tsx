@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { DemoTwins } from "@/components/demo/DemoTwins";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
 import { getLeaderboard } from "@/lib/twin/publish";
 
@@ -52,6 +53,10 @@ export default function Home() {
           </p>
         </div>
       </section>
+
+      <Suspense fallback={null}>
+        <DemoTwins />
+      </Suspense>
 
       <section aria-labelledby="how-heading" className="border-y-2 border-ink bg-paper-deep/60">
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-8">

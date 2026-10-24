@@ -46,37 +46,70 @@ Still open:
 - [ ] **Demo wallets** (step 9): most recently active addresses are bots with 50+ tx/day. Pick
       2–3 human-looking wallets with a few hundred swaps over the last months.
 
+## Blocked on credentials (you)
+
+- [ ] **`MEMWAL_PRIVATE_KEY` + `MEMWAL_ACCOUNT_ID` (mainnet)** from https://memory.walrus.xyz.
+      Until they are set, the app runs on the labelled local stand-in. After setting them,
+      restart `pnpm dev` and run `pnpm seed`. The write ledger dedupes per backend, so every
+      twin's memories are written to Walrus once; `/sync` then shows Walrus confirmations.
+      The hackathon needs ≥ 10 memories on mainnet; one seeded twin writes ~160.
+- [ ] **`ANTHROPIC_WORKSPACE_ID`.** The configured Anthropic key is not workspace-scoped, so
+      the API rejects calls without the `anthropic-workspace-id` header. Until it is set, the
+      profile, insights and Wrapped line use deterministic templates, and **chat returns an
+      error message**. Live chat answers are therefore not yet verified end to end. The
+      request, recall and prompt plumbing are covered by tests.
+
 ## Walrus Memory (MemWal)
 
-- [ ] **Credentials.** A mainnet `MEMWAL_ACCOUNT_ID` plus a delegate key from
-      https://memory.walrus.xyz. Can the dashboard also create testnet/staging accounts?
+- [ ] **Not yet run against the real relayer** (no credentials). The SDK calls used
+      (`MemWal.create`, `rememberBulkAsync`, `getRememberBulkStatus`, `recall` with
+      `namespace`/`sort`, `withMemWal`) were checked against the installed type definitions
+      of `@mysten-incubation/memwal@0.1.9`, but not exercised live.
 - [ ] **`MEMWAL_AGENT_ID`.** The hackathon form asks for it. Is it the same as
       `MEMWAL_ACCOUNT_ID`, or something else?
 - [ ] **Hosted relayer limits.** Documented defaults are ~60 weighted req/min per user
-      (`remember` = 5, bulk = 10, recall = 1); real values and launch caps are unknown.
-- [ ] **Write latency** on the public relayer (docs say 20–90 s), and whether identical text
-      deduplicates (Seal ciphertext may not be deterministic). We use our own
-      `idempotencyKey` and a SQLite ledger regardless.
-- [ ] **No update/delete in the SDK.** "Regenerating" the profile writes a new entry and
-      reads the most recent one. Unpublishing gates access in SQLite; memories remain in the
-      operator account. Document this in the README.
-- [ ] Does `withMemWal` (AI SDK v4–v6) work with the pinned `ai@6` + `@ai-sdk/anthropic@3`
-      combination? Verify in step 5.
+      (`remember` = 5, bulk = 10, recall = 1). A first sync writes ~160 memories in 8 bulk
+      calls (80 units), which may hit the per-minute limit. If it does, add pacing between
+      bulk calls in `lib/memory/walrus.ts`.
+- [ ] **Bulk job ids are assumed to come back in item order** (`job_ids[i]` ↔ `items[i]`).
+      Verify against the relayer; only status polling depends on it.
+- [ ] **Write latency** on the public relayer (docs say 20–90 s). The `/sync` page polls for
+      about 3 minutes.
+- [x] No update/delete in the SDK: profiles are regenerated as new entries and the newest is
+      read; unpublishing gates access in SQLite. Documented in the README.
+- [ ] `withMemWal` + `ai@6` + `@ai-sdk/anthropic@3`: compiles and is wired in, but not run
+      live (needs both MemWal and a working Anthropic key).
 
 ## Wallet / auth
 
-- [ ] **Swapped `@mysten/dapp-kit` 1.x for `@mysten/dapp-kit-react` 2.x** (+ `dapp-kit-core`),
-      its maintained successor. 1.x is built on the JSON-RPC client, which Sui disabled on
-      mainnet. The brief asked for "@mysten/dapp-kit"; this is the same kit's current package.
-- [ ] The wallet UI uses the public Sui fullnode gRPC endpoint (no key) only for wallet
-      plumbing; all data reads go server-side through Tatum. Confirm that no dApp Kit feature
-      we use depends on that client for data.
-- [ ] Rate limiting is in-memory (single instance). Swap to a shared store if deployed with
-      more than one instance.
+- [x] **Swapped `@mysten/dapp-kit` 1.x for `@mysten/dapp-kit-react` 2.x** (+ `dapp-kit-core`),
+      its maintained successor; 1.x is built on the JSON-RPC client Sui disabled on mainnet.
+- [ ] Sign-in verified with the dev burner wallet (Ed25519) only. Test with Slush (zkLogin),
+      whose verification goes through Tatum GraphQL.
+- [ ] Rate limiting is in-memory (single instance). Use a shared store if deployed with more
+      than one instance.
+
+## App
+
+- [ ] **Demo wallets are bots.** Scanning recent mainnet activity through Tatum mostly finds
+      high-frequency bots (the "MAGMA scalper" makes hundreds of swaps). It gives rich,
+      dollar-meaningful stats, but for a human story set `DEMO_WALLETS` to curated wallets
+      (e.g. your own) and run `pnpm seed`.
+- [ ] Live copy trading needs an active leader. The MAGMA bot pauses for hours at a time; the
+      copy engine was verified on real Tatum data (fills and skips) and by tests.
+- [ ] Wrapped card fonts are fetched from Google Fonts at runtime (memoized, with fallback).
+      Consider bundling TTFs before deploying somewhere without outbound network.
+- [ ] **Deployment:** SQLite needs a persistent disk; `after()` needs a platform with
+      `waitUntil` (Vercel) or a long-running Node server. `NEXT_PUBLIC_APP_URL` must be the
+      public origin for share links / OG images.
+- [ ] Share pages with a wrong token render a no-index "not found" page with HTTP 200 (the
+      check runs inside a streamed Suspense boundary). Nothing leaks, but it's a soft 404.
 
 ## Hackathon submission
 
-- [ ] Blog post (required): what it does, how it uses Tatum and Walrus, how it "learned over time".
-- [ ] Mainnet: ≥ 10 memories stored.
+- [x] Blog post draft: [docs/blog-post.md](docs/blog-post.md). Fill in the screenshots,
+      memory count, demo URL and repo URL.
+- [ ] Mainnet: ≥ 10 memories stored (blocked on MemWal credentials).
 - [ ] Tatum dashboard account ID for the form.
+- [ ] Public repo + deployed demo.
 - [ ] Stretch: x402 / MPP agent payments on Sui. Research the docs before writing any code.
