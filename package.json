@@ -11,14 +11,17 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:migrate": "prisma migrate dev"
+    "db:migrate": "prisma migrate dev",
+    "test:live": "TATUM_LIVE=1 vitest run tests/tatum/live"
   },
   "dependencies": {
+    "@grpc/grpc-js": "1.14.6",
     "@mysten/dapp-kit-core": "1.6.39",
     "@mysten/dapp-kit-react": "2.1.41",
     "@mysten/sui": "2.37.0",
     "@prisma/adapter-better-sqlite3": "7.10.1",
     "@prisma/client": "7.10.1",
+    "@protobuf-ts/grpc-transport": "2.11.1",
     "jose": "6.2.13",
     "next": "16.4.3",
     "react": "19.3.0",

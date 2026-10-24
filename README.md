@@ -4,7 +4,9 @@ Your Sui wallet's on-chain history, turned into an AI twin with memory. Built fo
 Tatum × Walrus **Total Recall** hackathon.
 
 - **Tatum** reads the chain. All server-side Sui reads go through Tatum's Sui gateway
-  ([lib/tatum.ts](lib/tatum.ts)).
+  ([lib/tatum/](lib/tatum/index.ts)): gRPC `ListTransactions` for ~9 months of wallet
+  history, GraphQL for coin metadata and signature checks, and the OHLCV Data API for
+  historical USD prices.
 - **Walrus Memory** stores the twin: profile, trades, insights, milestones and chat facts
   (`lib/memory.ts`, coming in step 4).
 
@@ -27,7 +29,8 @@ pnpm dev
 | Command | What it does |
 | --- | --- |
 | `pnpm dev` | Next.js dev server. A throwaway "Unsafe Burner Wallet" is available for testing sign-in. |
-| `pnpm test` | Vitest unit tests |
+| `pnpm test` | Vitest unit tests (offline, recorded Tatum fixtures) |
+| `pnpm test:live` | Live checks against Tatum mainnet (uses real credits) |
 | `pnpm typecheck` / `pnpm lint` | TypeScript / ESLint |
 | `pnpm db:migrate` | Apply Prisma migrations to SQLite |
 

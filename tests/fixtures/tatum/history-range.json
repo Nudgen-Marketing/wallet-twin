@@ -1,0 +1,16 @@
+{
+  "data": {
+    "serviceConfig": {
+      "availableRange": {
+        "first": {
+          "sequenceNumber": 303237845,
+          "timestamp": "2026-07-26T15:05:29.699Z"
+        },
+        "last": {
+          "sequenceNumber": 337453371,
+          "timestamp": "2026-10-24T03:59:06.865Z"
+        }
+      }
+    }
+  }
+}

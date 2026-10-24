@@ -1,0 +1,9 @@
+{
+  "data": {
+    "coinMetadata": {
+      "symbol": "SUI",
+      "name": "Sui",
+      "decimals": 9
+    }
+  }
+}

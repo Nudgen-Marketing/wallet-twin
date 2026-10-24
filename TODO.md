@@ -5,23 +5,46 @@ Resolve each item (or record the answer) before relying on it in a demo.
 
 ## Tatum (Sui)
 
-- [ ] **History depth.** Tatum's Sui GraphQL `transactions(filter: { affectedAddress })` only
-      reaches back to checkpoint 303225304 (≈ 26 Jul 2026, ~90 days), per the endpoint's
-      `serviceConfig.availableRange`. *Step 2:* test whether Tatum gRPC
-      `LedgerService/ListTransactions` goes further back with an API key.
-- [ ] **Credit cost** of a GraphQL query / gRPC call on Tatum. The free plan is 3 req/s and
-      100K lifetime credits; a standard RPC call costs 2 credits. GraphQL pricing is unknown.
-- [ ] **Anonymous GraphQL.** Queries worked without a key during research. We send `x-api-key`
-      whenever `TATUM_API_KEY` is set; the anonymous rate limit is unknown.
+Verified in step 2 (2026-10-24, live mainnet calls, `pnpm test:live`):
+
+- [x] **History depth.** GraphQL's `affectedAddress` index starts at checkpoint 303,236,578
+      (26 Jul 2026, ~90 days). **gRPC `LedgerService/ListTransactions` reaches checkpoint
+      237,661,233 (23 Jan 2026, ~9 months)** for a real user address. That is the start of the
+      node's index, so the gRPC source is the default (`TATUM_SUI_HISTORY_SOURCE=grpc`).
+- [x] gRPC and GraphQL return identical data for the same transactions (digests, checkpoints,
+      timestamps, gas, balance changes). See the live cross-check test.
+- [x] Tatum gRPC is **native gRPC over HTTP/2** (`application/grpc`), not gRPC-web, so it uses
+      `@protobuf-ts/grpc-transport` + `@grpc/grpc-js`. Server-only, and needs the API key.
+- [x] Free plan: `x-ttm-plan: free;ratelimit=3;strategy=shared`, i.e. **3 req/s shared across
+      HTTP and gRPC**. One rate gate in `lib/tatum` paces both. Anonymous GraphQL gets
+      429 with `retry-after: 60` after a few calls.
+- [x] GraphQL limits: 50 per page (transactions, balance changes, commands), query depth 20,
+      300 query nodes.
+- [x] **OHLCV prices** work: `GET https://api.tatum.io/v4/data/rate/symbol/OHLCV`, response
+      `{symbol, openTime, closeTime, open, high, low, close, …}` with string prices. Priced
+      coin types verified on-chain: SUI, USDC (native), WAL, CETUS, HAEDAL. **USDT and DEEP
+      are rejected** (400, not in the symbol list), as are NAVX, BLUE, NS and SCA per the docs.
+- [x] OHLCV returns the nearest candle even far outside its data range. We reject candles
+      more than 2 intervals away and mark the value unknown.
+
+Still open:
+
+- [ ] **OHLCV costs 50 credits per call** (docs). Pricing pages disagree on the free plan:
+      100K lifetime credits on the pricing page vs. 1M in the API spec. Prices must be cached
+      per (symbol, hour) in SQLite (step 3), and dashboard usage watched.
+- [ ] Credit cost of a GraphQL query and of a gRPC stream call is still unknown.
+- [ ] OHLCV `close` is quoted in **USDT**, not USD (USDC closes ≈ 1.0013). Acceptable for
+      estimates; label values as "≈ USD".
+- [ ] Cloudflare in front of `api.tatum.io` blocks some clients (Python's default user agent
+      got `error code: 1010`). Node `fetch` and curl work.
 - [ ] **zkLogin signature verification through Tatum GraphQL.** Sign-in passes
       `tatumSuiClient()` to `isValidPersonalMessageSignature` so zkLogin wallets (e.g. Slush)
       can resolve JWKs. Only Ed25519 has been verified (unit tests). Test with a real zkLogin
       wallet.
-- [ ] **Prices.** `GET /v4/data/rate/symbol/OHLCV?symbol=…&unix=…` lists SUI, USDC, WAL, CETUS,
-      HAEDAL but not DEEP, NAVX, BLUE, NS, SCA. Confirm `symbol=SUI` resolves, and confirm the
-      response shape before parsing.
 - [ ] No Sui support in Tatum Data API v4, v4 notifications, or `@tatumio/tatum`. Copy trading
       therefore polls. Re-check before the deadline in case support lands.
+- [ ] **Demo wallets** (step 9): most recently active addresses are bots with 50+ tx/day. Pick
+      2–3 human-looking wallets with a few hundred swaps over the last months.
 
 ## Walrus Memory (MemWal)
 

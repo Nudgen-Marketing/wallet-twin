@@ -14,6 +14,8 @@ const envSchema = z.object({
     .min(32, "SESSION_SECRET must be at least 32 characters (openssl rand -base64 48)"),
   NEXT_PUBLIC_SUI_NETWORK: z.enum(["mainnet", "testnet"]).default("mainnet"),
   TATUM_API_KEY: optionalSecret,
+  // gRPC indexes ~9 months of address history; GraphQL ~90 days (verified 2026-10-24).
+  TATUM_SUI_HISTORY_SOURCE: z.enum(["grpc", "graphql"]).default("grpc"),
   MEMWAL_PRIVATE_KEY: optionalSecret,
   MEMWAL_ACCOUNT_ID: optionalSecret,
   MEMWAL_SERVER_URL: z.url().default("https://relayer.memory.walrus.xyz"),
