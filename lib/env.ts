@@ -21,6 +21,8 @@ const envSchema = z.object({
   MEMWAL_SERVER_URL: z.url().default("https://relayer.memory.walrus.xyz"),
   ANTHROPIC_API_KEY: optionalSecret,
   ANTHROPIC_MODEL: z.string().min(1).default("claude-sonnet-5-5"),
+  // Required by Anthropic for API keys that aren't scoped to a single workspace.
+  ANTHROPIC_WORKSPACE_ID: optionalSecret,
 });
 
 export type ServerEnv = z.infer<typeof envSchema>;

@@ -13,16 +13,22 @@
     "test:watch": "vitest",
     "db:migrate": "prisma migrate dev",
     "test:live": "TATUM_LIVE=1 vitest run tests/tatum/live",
-    "analyze": "tsx --conditions=react-server --env-file=.env.local scripts/analyze-wallet.ts"
+    "analyze": "tsx --conditions=react-server --env-file=.env.local scripts/analyze-wallet.ts",
+    "sync:wallet": "tsx --conditions=react-server --env-file=.env.local scripts/sync-wallet.ts"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "3.0.135",
+    "@ai-sdk/react": "3.0.318",
     "@grpc/grpc-js": "1.14.6",
+    "@mysten-incubation/memwal": "0.1.9",
     "@mysten/dapp-kit-core": "1.6.39",
     "@mysten/dapp-kit-react": "2.1.41",
+    "@mysten/seal": "1.5.1",
     "@mysten/sui": "2.37.0",
     "@prisma/adapter-better-sqlite3": "7.10.1",
     "@prisma/client": "7.10.1",
     "@protobuf-ts/grpc-transport": "2.11.1",
+    "ai": "6.0.315",
     "jose": "6.2.13",
     "next": "16.4.3",
     "react": "19.3.0",

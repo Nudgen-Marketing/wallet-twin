@@ -64,3 +64,55 @@ model Activity {
   @@id([address, digest])
   @@index([address, timestamp])
 }
+
+// Incremental sync cursor per wallet: re-syncs only ask Tatum for newer checkpoints.
+model SyncState {
+  address        String    @id
+  lastCheckpoint Int?
+  lastDigest     String?
+  historyFromMs  DateTime?
+  lastSyncedAt   DateTime?
+}
+
+// One row per sync attempt; the /sync page polls the latest run for progress.
+model SyncRun {
+  id         String    @id @default(cuid())
+  address    String
+  status     String // running | done | failed
+  stage      String // history | analyze | twin | memory | done
+  // JSON progress counters shown in the UI.
+  progress   String    @default("{}")
+  error      String?
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+
+  @@index([address, startedAt])
+}
+
+// Ledger of every memory we asked Walrus Memory to store. The (address, key) pair
+// makes writes idempotent: a trade digest is never remembered twice.
+model MemoryWrite {
+  address   String
+  // e.g. "trade:<digest>", "profile:<runId>", "chat:<hash>"
+  key       String
+  type      String
+  text      String
+  backend   String // walrus | local
+  jobId     String?
+  status    String // pending | done | failed
+  error     String?
+  createdAt DateTime @default(now())
+
+  @@id([address, key])
+  @@index([address, status])
+}
+
+// Local stand-in for Walrus Memory, used only while MEMWAL_* credentials are missing.
+model LocalMemory {
+  id        Int      @id @default(autoincrement())
+  namespace String
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([namespace, createdAt])
+}

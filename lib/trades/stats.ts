@@ -38,6 +38,8 @@ export interface TwinStats {
   pricedSwapCount: number;
   tradedVolumeUsd: number;
   closedTrades: number;
+  /** Every sale with a known cost basis, oldest first. */
+  closed: ClosedTrade[];
   wins: number;
   /** 0–1, or null when nothing closed with a known cost basis. */
   winRate: number | null;
@@ -172,6 +174,7 @@ export function computeStats(activities: ValuedActivity[]): TwinStats {
     pricedSwapCount,
     tradedVolumeUsd,
     closedTrades: closed.length,
+    closed,
     wins,
     winRate: closed.length > 0 ? wins / closed.length : null,
     realizedPnlUsd: closed.reduce((total, trade) => total + trade.pnlUsd, 0),

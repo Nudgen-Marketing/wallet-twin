@@ -19,3 +19,6 @@ minimumReleaseAgeExclude:
   - '@next/swc-win32-x64-msvc@16.4.3'
   - eslint-config-next@16.4.3
   - next@16.4.3
+  - '@ai-sdk/gateway@3.0.221'
+  - '@ai-sdk/react@3.0.318'
+  - ai@6.0.315
