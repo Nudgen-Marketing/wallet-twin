@@ -116,3 +116,12 @@ model LocalMemory {
 
   @@index([namespace, createdAt])
 }
+
+// The Wrapped card's one-liner, regenerated only when the wallet's activity changes.
+model WrappedLine {
+  address   String   @id
+  // Activity fingerprint (count + newest digest) the line was written for.
+  dataKey   String
+  line      String
+  createdAt DateTime @default(now())
+}

@@ -13,6 +13,8 @@ const envSchema = z.object({
     .string()
     .min(32, "SESSION_SECRET must be at least 32 characters (openssl rand -base64 48)"),
   NEXT_PUBLIC_SUI_NETWORK: z.enum(["mainnet", "testnet"]).default("mainnet"),
+  // Absolute origin used for share links and social preview images.
+  NEXT_PUBLIC_APP_URL: z.url().default("http://localhost:3000"),
   TATUM_API_KEY: optionalSecret,
   // gRPC indexes ~9 months of address history; GraphQL ~90 days (verified 2026-10-24).
   TATUM_SUI_HISTORY_SOURCE: z.enum(["grpc", "graphql"]).default("grpc"),
