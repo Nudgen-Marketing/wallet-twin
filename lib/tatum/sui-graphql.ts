@@ -74,6 +74,16 @@ query HistoryRange($filters: [String!]) {
   }
 }`;
 
+export const BALANCES_QUERY = `
+query Balances($address: SuiAddress!, $after: String) {
+  address(address: $address) {
+    balances(first: 50, after: $after) {
+      pageInfo { hasNextPage endCursor }
+      nodes { coinType { repr } totalBalance }
+    }
+  }
+}`;
+
 export const COIN_METADATA_QUERY = `
 query CoinMetadata($coinType: String!) {
   coinMetadata(coinType: $coinType) { symbol name decimals }
@@ -188,6 +198,21 @@ const rangeResponseSchema = z.object({
   serviceConfig: z.object({ availableRange: z.object({ first: checkpointRef, last: checkpointRef }) }),
 });
 
+const balancesResponseSchema = z.object({
+  address: z
+    .object({
+      balances: z
+        .object({
+          pageInfo: z.object({ hasNextPage: z.boolean(), endCursor: z.string().nullable() }),
+          nodes: z.array(
+            z.object({ coinType: z.object({ repr: z.string() }).nullable(), totalBalance: z.string().nullable() }),
+          ),
+        })
+        .nullable(),
+    })
+    .nullable(),
+});
+
 const coinMetadataResponseSchema = z.object({
   coinMetadata: z
     .object({ symbol: z.string().nullable(), name: z.string().nullable(), decimals: z.number().nullable() })
@@ -288,6 +313,8 @@ export interface TatumSuiGraphQL extends HistorySource {
   /** Indexed checkpoint window; `addressFiltered` = the narrower affectedAddress index. */
   historyRange(options: { addressFiltered: boolean }): Promise<HistoryRange | null>;
   coinInfo(coinType: string): Promise<CoinInfo>;
+  /** Current raw balance per coin type (normalized), across up to `maxPages` pages. */
+  balances(address: string, maxPages?: number): Promise<Map<string, bigint>>;
 }
 
 export function createTatumSuiGraphQL({ url, apiKey, http }: SuiGraphQLClientConfig): TatumSuiGraphQL {
@@ -340,6 +367,26 @@ export function createTatumSuiGraphQL({ url, apiKey, http }: SuiGraphQLClientCon
         lastCheckpoint: last.sequenceNumber,
         lastTimestampMs: Date.parse(last.timestamp),
       };
+    },
+
+    async balances(address, maxPages = 4) {
+      const totals = new Map<string, bigint>();
+      let after: string | null = null;
+      for (let page = 0; page < maxPages; page += 1) {
+        const data: z.infer<typeof balancesResponseSchema> = await query(
+          BALANCES_QUERY,
+          { address: normalizeSuiAddress(address), after },
+          balancesResponseSchema,
+        );
+        const connection = data.address?.balances;
+        if (!connection) break;
+        for (const node of connection.nodes) {
+          if (node.coinType && node.totalBalance) totals.set(safeStructTag(node.coinType.repr), BigInt(node.totalBalance));
+        }
+        if (!connection.pageInfo.hasNextPage) break;
+        after = connection.pageInfo.endCursor;
+      }
+      return totals;
     },
 
     async coinInfo(coinType) {

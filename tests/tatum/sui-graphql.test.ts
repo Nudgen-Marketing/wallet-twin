@@ -148,3 +148,17 @@ describe("TatumSuiGraphQL.historyRange / coinInfo", () => {
     expect(calls[0].body.variables).toEqual({ coinType: SUI });
   });
 });
+
+describe("TatumSuiGraphQL.balances (recorded mainnet fixture)", () => {
+  test("returns raw balances keyed by normalized coin type", async () => {
+    const { http, calls } = fakeHttp(fixture("balances"));
+    const client = createTatumSuiGraphQL({ url: "https://tatum.test/graphql", http });
+
+    const balances = await client.balances(ADDRESS);
+
+    expect(balances.get(SUI)).toBe(20526874317n);
+    expect(balances.size).toBeGreaterThan(3);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].body.variables).toEqual({ address: ADDRESS, after: null });
+  });
+});

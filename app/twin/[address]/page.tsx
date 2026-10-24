@@ -1,9 +1,12 @@
 import { formatAddress } from "@mysten/sui/utils";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { FollowButton } from "@/components/copy/FollowButton";
 import { StatsPanel } from "@/components/twin/StatsPanel";
 import { TwinChat } from "@/components/twin/TwinChat";
 import { parseSuiAddress } from "@/lib/auth/message";
+import { getSession } from "@/lib/auth/session";
+import { db } from "@/lib/db";
 import { loadPublicTwin } from "@/lib/twin/public";
 
 const SUGGESTIONS = [
@@ -27,6 +30,10 @@ async function PublicTwin({ params }: { params: PageProps<"/twin/[address]">["pa
   const address = parseSuiAddress((await params).address);
   const twin = address ? await loadPublicTwin(address) : null;
   if (!address || !twin) notFound();
+  const session = await getSession();
+  const follow = session
+    ? await db.follow.findUnique({ where: { follower_leader: { follower: session.address, leader: address } } })
+    : null;
 
   return (
     <>
@@ -40,6 +47,15 @@ async function PublicTwin({ params }: { params: PageProps<"/twin/[address]">["pa
           <span className="text-signal">”</span>
         </p>
       )}
+
+      <div className="mt-8">
+        <FollowButton
+          leader={address}
+          initialFollowing={Boolean(follow?.active)}
+          isSignedIn={Boolean(session)}
+          isOwner={session?.address === address}
+        />
+      </div>
 
       <div className="mt-12 grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <div className="space-y-10">

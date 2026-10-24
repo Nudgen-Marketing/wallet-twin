@@ -79,6 +79,11 @@ export function getHistoryRange(): Promise<HistoryRange | null> {
   return suiGraphQL().historyRange({ addressFiltered: env().TATUM_SUI_HISTORY_SOURCE === "graphql" });
 }
 
+/** Current raw coin balances for an address (Tatum GraphQL `address.balances`). */
+export function getBalances(address: string): Promise<Map<string, bigint>> {
+  return suiGraphQL().balances(address);
+}
+
 export function getCoinInfo(coinType: string): Promise<CoinInfo> {
   return suiGraphQL().coinInfo(coinType);
 }

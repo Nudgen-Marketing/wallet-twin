@@ -1,4 +1,5 @@
 import "server-only";
+import { backtestCopyReturnPct } from "@/lib/copy/service";
 import { db } from "@/lib/db";
 import { latestMemories } from "@/lib/memory";
 import { STABLE_COIN_TYPES } from "@/lib/trades/stats";
@@ -18,16 +19,14 @@ export async function isPublished(address: string): Promise<boolean> {
   return (await db.publicTwin.count({ where: { address } })) > 0;
 }
 
-/**
- * Recomputes a published twin's leaderboard row. `copyReturnPct` is supplied by the
- * paper-trading engine when available.
- */
-export async function refreshLeaderboardEntry(address: string, copyReturnPct?: number | null): Promise<void> {
+/** Recomputes a published twin's leaderboard row, including its paper copy backtest. */
+export async function refreshLeaderboardEntry(address: string): Promise<void> {
   if (!(await isPublished(address))) return;
-  const [{ stats }, profile] = await Promise.all([
+  const [{ stats, activities }, profile] = await Promise.all([
     loadTwinSnapshot(address),
     latestMemories(address, "profile", { query: "trading style profile summary" }),
   ]);
+  const copyReturnPct = await backtestCopyReturnPct(address, activities);
   const favorite = stats.favoriteTokens.find(
     (token) => token.symbol && token.symbol !== "SUI" && !STABLE_COIN_TYPES.has(token.coinType),
   );
@@ -39,7 +38,7 @@ export async function refreshLeaderboardEntry(address: string, copyReturnPct?: n
     volumeUsd: stats.tradedVolumeUsd,
     favoriteToken: favorite?.symbol ?? stats.favoriteTokens[0]?.symbol ?? null,
     headline: profile[0] ? firstSentence(stripAsOf(profile[0].text)) : null,
-    ...(copyReturnPct !== undefined ? { copyReturnPct } : {}),
+    copyReturnPct,
   };
   await db.leaderboardEntry.upsert({ where: { address }, create: { address, ...data }, update: data });
 }

@@ -147,3 +147,42 @@ model LeaderboardEntry {
   headline       String?
   updatedAt      DateTime @updatedAt
 }
+
+// A follower paper-copying a published twin. SIMULATED: no real funds or trades.
+model Follow {
+  id             String    @id @default(cuid())
+  follower       String
+  leader         String
+  active         Boolean   @default(true)
+  startingUsd    Float     @default(1000)
+  // JSON PaperState (cash, positions, last prices, totals) — see lib/copy/engine.ts
+  state          String
+  // JSON leader balances in units, kept current from Tatum snapshots + new activity
+  leaderBalances String
+  // Only leader transactions after this checkpoint are copied.
+  lastCheckpoint Int
+  startedAt      DateTime  @default(now())
+  lastPolledAt   DateTime?
+
+  @@unique([follower, leader])
+  @@index([leader])
+}
+
+// One row per leader swap considered for a follow (filled or skipped, with reason).
+model PaperTrade {
+  id          String   @id @default(cuid())
+  followId    String
+  digest      String
+  timestamp   DateTime
+  status      String // filled | skipped
+  reason      String?
+  soldCoin    String?
+  soldAmount  Float?
+  boughtCoin  String?
+  boughtAmount Float?
+  volumeUsd   Float?
+  feeUsd      Float?
+
+  @@unique([followId, digest])
+  @@index([followId, timestamp])
+}

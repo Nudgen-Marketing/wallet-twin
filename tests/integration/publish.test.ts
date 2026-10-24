@@ -1,4 +1,7 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
+
+// The copy backtest reads live balances from Tatum; tests stub that boundary.
+vi.mock("@/lib/copy/service", () => ({ backtestCopyReturnPct: async () => 12.5 }));
 import { db } from "@/lib/db";
 import { rememberTwin } from "@/lib/memory";
 import { storeActivities } from "@/lib/twin/data";
@@ -47,6 +50,7 @@ describe("publish lifecycle", () => {
       swaps: 2,
       realizedPnlUsd: 20,
       favoriteToken: "MEME",
+      copyReturnPct: 12.5,
       headline: "This wallet flips MEME fast.",
     });
 
