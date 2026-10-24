@@ -29,3 +29,38 @@ model AuthNonce {
 
   @@index([address])
 }
+
+// Coin metadata cache (symbol/decimals), filled from Tatum GraphQL coinMetadata.
+model CoinInfo {
+  coinType  String   @id
+  symbol    String?
+  name      String?
+  decimals  Int?
+  fetchedAt DateTime @default(now())
+}
+
+// Tatum OHLCV results per (symbol, candle). usd = null records "Tatum has no usable
+// price", so we never pay 50 credits twice for the same miss.
+model PriceCache {
+  symbol      String
+  candleStart DateTime
+  usd         Float?
+  fetchedAt   DateTime @default(now())
+
+  @@id([symbol, candleStart])
+}
+
+// A wallet's classified, USD-valued on-chain activity (one row per transaction).
+model Activity {
+  address    String
+  digest     String
+  checkpoint Int
+  timestamp  DateTime
+  kind       String
+  usdValue   Float?
+  // JSON-encoded ValuedActivity (legs, gas, counterparty, NFT types).
+  data       String
+
+  @@id([address, digest])
+  @@index([address, timestamp])
+}
