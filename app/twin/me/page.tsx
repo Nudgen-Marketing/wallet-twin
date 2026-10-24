@@ -3,11 +3,13 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { MemoryBadge } from "@/components/sync/MemoryBadge";
 import { StatsPanel } from "@/components/twin/StatsPanel";
+import { PublishToggle } from "@/components/twin/PublishToggle";
 import { TwinChat } from "@/components/twin/TwinChat";
 import { getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { memoryBackendName } from "@/lib/memory";
 import { loadTwinSnapshot } from "@/lib/twin/data";
+import { isPublished } from "@/lib/twin/publish";
 
 const SUGGESTIONS = [
   "What's my worst habit?",
@@ -38,9 +40,10 @@ async function MyTwin() {
     );
   }
 
-  const [snapshot, state] = await Promise.all([
+  const [snapshot, state, published] = await Promise.all([
     loadTwinSnapshot(session.address),
     db.syncState.findUnique({ where: { address: session.address } }),
+    isPublished(session.address),
   ]);
 
   if (!state) {
@@ -72,8 +75,9 @@ async function MyTwin() {
         </div>
       </div>
       <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-        <div className="lg:sticky lg:top-8 lg:self-start">
+        <div className="space-y-10 lg:sticky lg:top-8 lg:self-start">
           <StatsPanel stats={snapshot.stats} historyFromMs={state.historyFromMs?.getTime() ?? null} />
+          <PublishToggle address={session.address} initialPublished={published} />
         </div>
         <TwinChat api="/api/chat" audience="owner" suggestions={SUGGESTIONS} twinName="Your twin" />
       </div>

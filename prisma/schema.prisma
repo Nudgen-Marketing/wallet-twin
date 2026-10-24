@@ -125,3 +125,25 @@ model WrappedLine {
   line      String
   createdAt DateTime @default(now())
 }
+
+// Opt-in: a row here means the owner chose to publish their twin. Deleting it
+// (unpublish) removes the twin from the leaderboard and public chat immediately.
+model PublicTwin {
+  address     String   @id
+  publishedAt DateTime @default(now())
+}
+
+// Cached leaderboard numbers for published twins (recomputed after syncs/publishing).
+model LeaderboardEntry {
+  address        String   @id
+  swaps          Int
+  closedTrades   Int
+  winRate        Float?
+  realizedPnlUsd Float
+  volumeUsd      Float
+  // Simulated return of a $1,000 paper copy portfolio over the twin's history (step 8).
+  copyReturnPct  Float?
+  favoriteToken  String?
+  headline       String?
+  updatedAt      DateTime @updatedAt
+}

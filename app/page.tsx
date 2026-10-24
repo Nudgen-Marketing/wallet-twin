@@ -1,3 +1,9 @@
+import Link from "next/link";
+import { connection } from "next/server";
+import { Suspense } from "react";
+import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
+import { getLeaderboard } from "@/lib/twin/publish";
+
 const STEPS = [
   {
     kicker: "01 · Read",
@@ -65,18 +71,26 @@ export default function Home() {
       </section>
 
       <section aria-labelledby="top-twins-heading" className="mx-auto max-w-6xl px-4 py-[var(--space-section)] sm:px-8">
-        <div className="flex items-baseline justify-between border-b border-ink pb-2">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 id="top-twins-heading" className="font-display text-3xl font-bold">
-            Top twins this week
+            Top twins
           </h2>
-          <span className="font-mono text-xs uppercase tracking-widest text-ink-soft">
-            Ranked by simulated performance
-          </span>
+          <Link
+            href="/leaderboard"
+            className="font-mono text-xs uppercase tracking-widest text-ink-soft underline-offset-4 hover:text-ink hover:underline"
+          >
+            Full leaderboard →
+          </Link>
         </div>
-        <p className="mt-6 max-w-lg text-ink-soft">
-          No public twins yet. Sync your wallet and publish yours to be the first on the board.
-        </p>
+        <Suspense fallback={<p className="mt-6 text-ink-soft">Loading the board…</p>}>
+          <TopTwins />
+        </Suspense>
       </section>
     </main>
   );
+}
+
+async function TopTwins() {
+  await connection();
+  return <LeaderboardTable rows={await getLeaderboard(5)} compact />;
 }

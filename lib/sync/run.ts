@@ -7,6 +7,7 @@ import { loadTwinSnapshot, storeActivities } from "@/lib/twin/data";
 import { formatDate } from "@/lib/twin/format";
 import { milestoneMemories, tradeMemories } from "@/lib/twin/memories";
 import { generateNarrative } from "@/lib/twin/narrative";
+import { refreshLeaderboardEntry } from "@/lib/twin/publish";
 
 /** Demo cap per sync: keeps Tatum credits and memory writes bounded. */
 export const SYNC_TX_CAP = 1_000;
@@ -111,6 +112,8 @@ export async function runSync(runId: string, address: string): Promise<void> {
         lastSyncedAt: new Date(),
       },
     });
+    // Published twins keep their leaderboard row current (no-op for private twins).
+    await refreshLeaderboardEntry(address);
     await db.syncRun.update({
       where: { id: runId },
       data: { status: "done", stage: "done", progress: JSON.stringify(progress), finishedAt: new Date() },
