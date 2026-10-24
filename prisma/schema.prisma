@@ -1,0 +1,31 @@
+// App state only. Twin knowledge (profile, trades, insights, milestones, chat facts)
+// lives in Walrus Memory — see lib/memory.ts.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  // Normalized 0x-prefixed 64-hex Sui address.
+  address   String   @id
+  createdAt DateTime @default(now())
+  lastLogin DateTime @default(now())
+}
+
+// Single-use sign-in challenge. The exact message is stored so verification
+// checks the signature against the bytes the wallet was shown.
+model AuthNonce {
+  nonce     String    @id
+  address   String
+  message   String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([address])
+}
