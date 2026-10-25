@@ -161,12 +161,37 @@ browser extension. It is disabled in production builds.
 | --- | --- |
 | `pnpm dev` / `pnpm build` | Next.js dev server / production build |
 | `pnpm test` | Unit + integration tests (recorded Tatum fixtures, throwaway SQLite DB) |
+| `pnpm test:e2e` | Playwright end-to-end suite (see below) |
 | `pnpm test:live` | Live checks against Tatum mainnet: gRPC vs GraphQL cross-check, history depth, prices (uses credits) |
 | `pnpm typecheck` / `pnpm lint` | `next typegen` + TypeScript / ESLint |
 | `pnpm analyze <address>` | Run Tatum → parser → prices → stats for any wallet and print the stats |
 | `pnpm sync:wallet <address>` | Full twin sync for one wallet from the CLI |
 | `pnpm seed` | Sync + publish the demo twins |
 | `pnpm check:services` | Pre-flight: Tatum, Walrus Memory relayer and Anthropic reachable with your keys |
+
+## End-to-end tests
+
+`pnpm test:e2e` runs 15 Playwright tests in your installed Google Chrome (`channel: "chrome"`,
+no browser download). It starts its own dev server on port 3100 with an isolated build dir
+(`build/e2e`), a freshly migrated and seeded database (`prisma/e2e.db`,
+[`scripts/e2e-seed.ts`](scripts/e2e-seed.ts)), and the local memory backend, so a run never
+touches your dev data or writes test twins to Walrus.
+
+Covered flows:
+
+- **Landing and nav:** pitch, demo twins, top twins, every section.
+- **Sign-in and sync:** dev burner wallet signs the message, the sync runs through Tatum, sign-out.
+- **API guards:** cross-site, unauthenticated, forged demo login and bad share token.
+- **Demo twin:** seeded stats, the demo restrictions, and chat (a reply, or a friendly error when the LLM is unavailable).
+- **Wrapped:** the PNG renders, the share-to-X link, the public share page with og:image, a wrong token.
+- **Leaderboard and public twin:** ranking, and private `[chat]`/`[trade]` memories never appear on the public page.
+- **Paper copy trading:** follow → $1,000 portfolio → poll → stop.
+- **Publishing:** publish → leaderboard → unpublish.
+- **Phone layouts:** no horizontal overflow at Pixel 7 size.
+
+Every test also fails on uncaught page errors, unexpected console errors, or any 5xx from the
+app. The sync and follow flows call Tatum with your key. The HTML report is written to
+`build/playwright-report`.
 
 ## 2-minute demo script
 
