@@ -10,7 +10,7 @@ import { createTatumPrices } from "@/lib/tatum/prices";
 import { createTatumSuiGraphQL } from "@/lib/tatum/sui-graphql";
 import { createTatumSuiGrpc } from "@/lib/tatum/sui-grpc";
 
-config({ path: ".env.local", quiet: true });
+config({ path: [".env.local", ".env"], quiet: true });
 
 const LIVE = process.env.TATUM_LIVE === "1";
 const apiKey = process.env.TATUM_API_KEY ?? "";

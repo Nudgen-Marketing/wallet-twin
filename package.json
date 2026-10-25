@@ -13,9 +13,10 @@
     "test:watch": "vitest",
     "db:migrate": "prisma migrate dev",
     "test:live": "TATUM_LIVE=1 vitest run tests/tatum/live",
-    "analyze": "tsx --conditions=react-server --env-file=.env.local scripts/analyze-wallet.ts",
-    "sync:wallet": "tsx --conditions=react-server --env-file=.env.local scripts/sync-wallet.ts",
-    "seed": "tsx --conditions=react-server --env-file=.env.local scripts/seed.ts"
+    "analyze": "tsx --conditions=react-server --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/analyze-wallet.ts",
+    "sync:wallet": "tsx --conditions=react-server --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/sync-wallet.ts",
+    "seed": "tsx --conditions=react-server --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/seed.ts",
+    "check:services": "tsx --conditions=react-server --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/check-services.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "3.0.135",

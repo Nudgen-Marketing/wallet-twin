@@ -127,7 +127,10 @@ export interface WriteSummary {
 
 /** Polls Walrus for in-flight writes and returns the twin's memory write totals. */
 export async function refreshWrites(address: string): Promise<WriteSummary> {
-  const pending = await db.memoryWrite.findMany({ where: { address, status: "pending", jobId: { not: null } } });
+  const backendName = memoryBackendName();
+  const pending = await db.memoryWrite.findMany({
+    where: { address, backend: backendName, status: "pending", jobId: { not: null } },
+  });
   if (pending.length > 0) {
     try {
       const statuses = await memory().jobStatuses(pending.map((row) => row.jobId!));
@@ -147,9 +150,9 @@ export async function refreshWrites(address: string): Promise<WriteSummary> {
       console.error("[memory] status poll failed", caught instanceof Error ? caught.message : caught);
     }
   }
-  const counts = await db.memoryWrite.groupBy({ by: ["status"], where: { address }, _count: true });
+  const counts = await db.memoryWrite.groupBy({ by: ["status"], where: { address, backend: backendName }, _count: true });
   const count = (status: string) => counts.find((row) => row.status === status)?._count ?? 0;
-  return { pending: count("pending"), done: count("done"), failed: count("failed"), backend: memoryBackendName() };
+  return { pending: count("pending"), done: count("done"), failed: count("failed"), backend: backendName };
 }
 
 /**

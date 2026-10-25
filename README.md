@@ -129,7 +129,7 @@ pnpm install
 cp .env.example .env.local
 ```
 
-Fill in `.env.local`:
+Fill in `.env.local` (a plain `.env` works too):
 
 - `SESSION_SECRET`: 32+ random characters (`openssl rand -base64 48`)
 - `TATUM_API_KEY`: from [dashboard.tatum.io](https://dashboard.tatum.io)
@@ -166,6 +166,7 @@ browser extension. It is disabled in production builds.
 | `pnpm analyze <address>` | Run Tatum → parser → prices → stats for any wallet and print the stats |
 | `pnpm sync:wallet <address>` | Full twin sync for one wallet from the CLI |
 | `pnpm seed` | Sync + publish the demo twins |
+| `pnpm check:services` | Pre-flight: Tatum, Walrus Memory relayer and Anthropic reachable with your keys |
 
 ## 2-minute demo script
 

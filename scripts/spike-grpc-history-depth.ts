@@ -9,7 +9,7 @@ import { ChannelCredentials } from "@grpc/grpc-js";
 import { SuiGrpcClient } from "@mysten/sui/grpc";
 import { GrpcTransport } from "@protobuf-ts/grpc-transport";
 
-config({ path: ".env.local", quiet: true });
+config({ path: [".env.local", ".env"], quiet: true });
 
 // Tatum speaks native gRPC (HTTP/2, application/grpc), not gRPC-web.
 const GRPC_HOST = "sui-mainnet-grpc.gateway.tatum.io:443";

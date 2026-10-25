@@ -48,37 +48,41 @@ Still open:
 
 ## Blocked on credentials (you)
 
-- [ ] **`MEMWAL_PRIVATE_KEY` + `MEMWAL_ACCOUNT_ID` (mainnet)** from https://memory.walrus.xyz.
-      Until they are set, the app runs on the labelled local stand-in. After setting them,
-      restart `pnpm dev` and run `pnpm seed`. The write ledger dedupes per backend, so every
-      twin's memories are written to Walrus once; `/sync` then shows Walrus confirmations.
-      The hackathon needs ≥ 10 memories on mainnet; one seeded twin writes ~160.
-- [ ] **`ANTHROPIC_WORKSPACE_ID`.** The configured Anthropic key is not workspace-scoped, so
-      the API rejects calls without the `anthropic-workspace-id` header. Until it is set, the
-      profile, insights and Wrapped line use deterministic templates, and **chat returns an
-      error message**. Live chat answers are therefore not yet verified end to end. The
-      request, recall and prompt plumbing are covered by tests.
+- [ ] **`ANTHROPIC_WORKSPACE_ID` doesn't match the API key.** Verified 2026-10-25 with direct
+      Messages API calls: without the header the key is rejected ("not scoped to a
+      workspace"); with the configured `wrkspc_…` ID the API answers "Workspace … not found".
+      The ID is well-formed but belongs to a different organisation than the key (or is
+      mistyped). Fix: copy the workspace ID from the **same** Console organisation as the key,
+      or create a key inside a workspace and drop `ANTHROPIC_WORKSPACE_ID`. Then run
+      `pnpm check:services`. Until then, chat shows an error message, and the profile,
+      insights and Wrapped line use deterministic templates. Run `pnpm seed` afterwards to
+      regenerate the profile and insights with Claude.
 
 ## Walrus Memory (MemWal)
 
-- [ ] **Not yet run against the real relayer** (no credentials). The SDK calls used
-      (`MemWal.create`, `rememberBulkAsync`, `getRememberBulkStatus`, `recall` with
-      `namespace`/`sort`, `withMemWal`) were checked against the installed type definitions
-      of `@mysten-incubation/memwal@0.1.9`, but not exercised live.
+Verified live on mainnet 2026-10-25 (`https://relayer.memory.walrus.xyz`, relayer 0.1.0):
+
+- [x] `pnpm seed` wrote **171 memories** for the two demo twins (159 + 12). All confirmed
+      `done` via `getRememberBulkStatus` in about 3.5 minutes. Hackathon minimum is 10.
+- [x] Semantic `recall` across the per-type namespaces works (e.g. "biggest loss on MAGMA"
+      returns the worst-loss milestone first). `sort: "recent"` returns the newest profile.
+      Public recall only touches profile/insight/milestone.
+- [x] `withMemWal` end to end (with a stand-in model, on a dedicated test namespace):
+      MemWal's `analyze()` extracted "User is saving for a house in Lisbon" and "risk limit is
+      $500 per trade" from one message and stored them as `[chat]` memories; the next turn
+      recalled and injected the fact into the model prompt.
+- [x] **Relayer limits, from its own 429 response:** 60 weighted requests/min **per delegate
+      key**. Bulk status takes **at most 20 job ids** per request. Both are handled in
+      `lib/memory/walrus.ts` and `lib/memory/budget.ts` (weighted budget of 55/min, 429
+      retry after `retry_after_seconds`, chunked status polls). The budget is per process,
+      so avoid running `pnpm seed` while the dev server is busy.
 - [ ] **`MEMWAL_AGENT_ID`.** The hackathon form asks for it. Is it the same as
       `MEMWAL_ACCOUNT_ID`, or something else?
-- [ ] **Hosted relayer limits.** Documented defaults are ~60 weighted req/min per user
-      (`remember` = 5, bulk = 10, recall = 1). A first sync writes ~160 memories in 8 bulk
-      calls (80 units), which may hit the per-minute limit. If it does, add pacing between
-      bulk calls in `lib/memory/walrus.ts`.
-- [ ] **Bulk job ids are assumed to come back in item order** (`job_ids[i]` ↔ `items[i]`).
-      Verify against the relayer; only status polling depends on it.
-- [ ] **Write latency** on the public relayer (docs say 20–90 s). The `/sync` page polls for
-      about 3 minutes.
+- [ ] Chat latency: an owner chat turn makes ~6 Walrus recalls (4 namespaces + profile +
+      `withMemWal`), about 3–6 s before the model starts. Consider caching recalled profile
+      and insights per twin for a few minutes.
 - [x] No update/delete in the SDK: profiles are regenerated as new entries and the newest is
       read; unpublishing gates access in SQLite. Documented in the README.
-- [ ] `withMemWal` + `ai@6` + `@ai-sdk/anthropic@3`: compiles and is wired in, but not run
-      live (needs both MemWal and a working Anthropic key).
 
 ## Wallet / auth
 

@@ -100,6 +100,18 @@ export async function runSync(runId: string, address: string): Promise<void> {
     progress.memoriesSubmitted = written.submitted;
     progress.memoriesSkipped = written.skipped;
     progress.memoriesFailed = written.failed;
+    // A failed profile/insight from an earlier run is superseded once this run's narrative
+    // is stored; drop it so it doesn't linger as a permanent "failed" write.
+    if (written.failed === 0 && entries.some((entry) => entry.type === "profile")) {
+      await db.memoryWrite.deleteMany({
+        where: {
+          address,
+          type: { in: ["profile", "insight"] },
+          status: "failed",
+          NOT: { key: { contains: runId } },
+        },
+      });
+    }
 
     const newest = history.transactions.at(-1);
     await db.syncState.upsert({

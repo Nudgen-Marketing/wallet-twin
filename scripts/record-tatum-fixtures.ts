@@ -7,7 +7,7 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { config } from "dotenv";
 import { ADDRESS_HISTORY_QUERY, COIN_METADATA_QUERY, HISTORY_RANGE_QUERY } from "../lib/tatum/sui-graphql";
 
-config({ path: ".env.local" });
+config({ path: [".env.local", ".env"], quiet: true });
 
 const URL = "https://sui-mainnet.gateway.tatum.io/graphql";
 const OUT_DIR = "tests/fixtures/tatum";

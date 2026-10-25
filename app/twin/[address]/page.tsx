@@ -1,5 +1,6 @@
 import { formatAddress } from "@mysten/sui/utils";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { FollowButton } from "@/components/copy/FollowButton";
 import { StatsPanel } from "@/components/twin/StatsPanel";
@@ -27,6 +28,8 @@ export default function PublicTwinPage(props: PageProps<"/twin/[address]">) {
 }
 
 async function PublicTwin({ params }: { params: PageProps<"/twin/[address]">["params"] }) {
+  // Twin memories are recalled live from Walrus Memory: request-time work, never prerendered.
+  await connection();
   const address = parseSuiAddress((await params).address);
   const twin = address ? await loadPublicTwin(address) : null;
   if (!address || !twin) notFound();
