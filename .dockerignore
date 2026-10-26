@@ -1,0 +1,54 @@
+# Version control
+.git
+.gitignore
+
+# Dependencies
+node_modules
+.pnpm-store
+
+# Next.js build output
+.next
+out
+build
+
+# Playwright & Tests
+test-results
+playwright-report
+blob-report
+.playwright
+tests
+e2e
+playwright.config.ts
+vitest.config.mts
+
+# Local environment & databases
+.env
+.env*.local
+.env.development
+.env.test
+.env.production
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+prisma/*.db*
+
+# IDE & OS
+.claude
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+*.tsbuildinfo
+
+# Documentation & Scratch
+TODO.md
+AGENTS.md
+docs
+scratch
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
