@@ -28,6 +28,8 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/generated ./generated
 COPY . .
+# public/ holds no tracked files yet, so a git checkout has no such directory; the runner stage copies it
+RUN mkdir -p public
 
 # Build arguments for Next.js public environment variables
 ARG NEXT_PUBLIC_SUI_NETWORK="mainnet"
