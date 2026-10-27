@@ -16,13 +16,16 @@ export function fail(error: string, status: number): NextResponse<ApiResponse<ne
 
 /**
  * CSRF guard for cookie-authenticated mutations: the browser always sends Origin on
- * cross-site POSTs, so reject any request whose Origin isn't this host.
+ * cross-site POSTs, so reject any request whose Origin isn't this host. The host comes from
+ * the request headers, as Server Actions do: behind a proxy the standalone server's own URL
+ * is its bind address (0.0.0.0:3000), never the public host the browser used.
  */
 export function isSameOrigin(request: NextRequest): boolean {
   const origin = request.headers.get("origin");
-  if (!origin) return false;
+  const host = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim() || request.headers.get("host");
+  if (!origin || !host) return false;
   try {
-    return new URL(origin).host === request.nextUrl.host;
+    return new URL(origin).host === host;
   } catch {
     return false;
   }
