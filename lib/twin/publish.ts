@@ -1,7 +1,7 @@
 import "server-only";
 import { backtestCopyReturnPct } from "@/lib/copy/service";
 import { db } from "@/lib/db";
-import { latestMemories } from "@/lib/memory";
+import { latestMemories, memoryBackendName } from "@/lib/memory";
 import { STABLE_COIN_TYPES } from "@/lib/trades/stats";
 import { loadTwinSnapshot } from "@/lib/twin/data";
 
@@ -19,13 +19,24 @@ export async function isPublished(address: string): Promise<boolean> {
   return (await db.publicTwin.count({ where: { address } })) > 0;
 }
 
+/**
+ * The newest profile this app wrote, from its own write ledger. Walrus indexes a write minutes
+ * after it lands, so recalling right after a sync would hand back an older profile.
+ */
+async function latestProfileText(address: string): Promise<string | null> {
+  const written = await db.memoryWrite.findFirst({
+    where: { address, type: "profile", status: { not: "failed" }, backend: memoryBackendName() },
+    orderBy: { createdAt: "desc" },
+  });
+  if (written) return written.text;
+  const recalled = await latestMemories(address, "profile", { query: "trading style profile summary" });
+  return recalled[0]?.text ?? null;
+}
+
 /** Recomputes a published twin's leaderboard row, including its paper copy backtest. */
 export async function refreshLeaderboardEntry(address: string): Promise<void> {
   if (!(await isPublished(address))) return;
-  const [{ stats, activities }, profile] = await Promise.all([
-    loadTwinSnapshot(address),
-    latestMemories(address, "profile", { query: "trading style profile summary" }),
-  ]);
+  const [{ stats, activities }, profile] = await Promise.all([loadTwinSnapshot(address), latestProfileText(address)]);
   const copyReturnPct = await backtestCopyReturnPct(address, activities);
   const favorite = stats.favoriteTokens.find(
     (token) => token.symbol && token.symbol !== "SUI" && !STABLE_COIN_TYPES.has(token.coinType),
@@ -37,7 +48,7 @@ export async function refreshLeaderboardEntry(address: string): Promise<void> {
     realizedPnlUsd: stats.realizedPnlUsd,
     volumeUsd: stats.tradedVolumeUsd,
     favoriteToken: favorite?.symbol ?? stats.favoriteTokens[0]?.symbol ?? null,
-    headline: profile[0] ? firstSentence(stripAsOf(profile[0].text)) : null,
+    headline: profile ? firstSentence(stripAsOf(profile)) : null,
     copyReturnPct,
   };
   await db.leaderboardEntry.upsert({ where: { address }, create: { address, ...data }, update: data });
