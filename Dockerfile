@@ -62,6 +62,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install prisma CLI for running database migrations at container startup
 RUN npm install -g prisma@7.10.1 dotenv@18.0.9
+# prisma.config.ts imports dotenv and prisma/config; Node won't resolve global modules without this
+ENV NODE_PATH=/usr/local/lib/node_modules
 
 # Create non-root system group and user
 RUN addgroup --system --gid 1001 nodejs && \

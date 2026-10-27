@@ -18,6 +18,8 @@ blob-report
 .playwright
 tests
 e2e
+# Seeds the e2e database from test fixtures under tests/, which the image doesn't ship
+scripts/e2e-seed.ts
 playwright.config.ts
 vitest.config.mts
 
