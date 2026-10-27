@@ -11,7 +11,7 @@ const WalletPanel = dynamic(() => import("@/components/wallet/WalletPanel").then
 
 export function WalletControls() {
   return (
-    <Suspense fallback={<span className="inline-block h-10 w-36 animate-pulse rounded-sm bg-paper-deep" aria-hidden />}>
+    <Suspense fallback={<span className="scan-bar inline-block h-10 w-36 bg-paper-deep" aria-hidden />}>
       <WalletPanel />
     </Suspense>
   );

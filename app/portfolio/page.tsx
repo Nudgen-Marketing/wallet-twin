@@ -11,12 +11,12 @@ export default function PortfolioPage() {
   return (
     <main className="mx-auto max-w-6xl px-4 py-12 sm:px-8">
       <div className="flex flex-wrap items-center gap-3">
-        <p className="font-mono text-xs uppercase tracking-widest text-signal">Paper portfolio</p>
-        <span className="rounded-sm bg-ink px-2 py-0.5 font-mono text-[0.65rem] uppercase tracking-widest text-paper">
+        <p className="kicker">Paper portfolio</p>
+        <span className="border border-signal/60 bg-signal/10 px-2 py-0.5 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-signal">
           Simulated · no real funds
         </span>
       </div>
-      <h1 className="mt-3 font-display text-5xl font-black tracking-tight sm:text-6xl">Copy-trading, on paper</h1>
+      <h1 className="mt-3 fringe font-display text-5xl font-bold uppercase tracking-tight sm:text-6xl">Copy-trading, on paper</h1>
       <p className="mt-4 max-w-2xl text-lg text-ink-soft">
         Each twin you follow gets $1,000 of simulated money. When the leader swaps on Sui, we mirror the same share of
         their position at that moment&apos;s price. No transaction is ever sent. A {FEE_RATE * 100}% paper fee on copied
@@ -38,7 +38,7 @@ async function Portfolio() {
     return (
       <p className="mt-8 text-lg text-ink-soft">
         You aren&apos;t paper-copying anyone yet. Pick a twin on the{" "}
-        <Link href="/leaderboard" className="text-ink underline decoration-signal decoration-2 underline-offset-4">
+        <Link href="/leaderboard" className="link-volt">
           leaderboard
         </Link>
         .
@@ -59,7 +59,7 @@ async function Portfolio() {
 
   return (
     <>
-      <div className="mt-10 grid gap-6 border-y-2 border-ink py-6 sm:grid-cols-4">
+      <div className="panel mt-10 grid gap-6 p-6 sm:grid-cols-4">
         <Total label="Paper value" value={formatUsd(totals.value)} />
         <Total
           label="Paper PnL"
@@ -84,8 +84,8 @@ async function Portfolio() {
 function Total({ label, value, tone = 0, note }: { label: string; value: string; tone?: number; note?: string }) {
   return (
     <div>
-      <p className="font-mono text-[0.7rem] uppercase tracking-widest text-ink-soft">{label}</p>
-      <p className={`mt-1 font-display text-3xl font-black tabular-nums ${tone > 0 ? "text-gain" : tone < 0 ? "text-loss" : ""}`}>
+      <p className="font-mono text-[0.68rem] uppercase tracking-[0.18em] text-ink-soft">{label}</p>
+      <p className={`mt-1 font-display text-3xl font-bold tabular-nums ${tone > 0 ? "text-gain" : tone < 0 ? "text-loss" : ""}`}>
         {value}
       </p>
       {note && <p className="font-mono text-xs text-ink-soft">{note}</p>}
@@ -96,11 +96,11 @@ function Total({ label, value, tone = 0, note }: { label: string; value: string;
 function FollowCard({ follow }: { follow: FollowView }) {
   const tone = follow.pnlUsd > 0 ? "text-gain" : follow.pnlUsd < 0 ? "text-loss" : "";
   return (
-    <article className="border-2 border-ink bg-paper p-5 shadow-[6px_6px_0_var(--ink)]">
+    <article className="reveal panel panel-interactive p-6">
       <header className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="font-display text-2xl font-bold">
+        <h2 className="font-display text-2xl font-semibold uppercase tracking-wide">
           Copying{" "}
-          <Link href={`/twin/${follow.leader}`} className="font-mono text-xl underline decoration-signal decoration-2 underline-offset-4">
+          <Link href={`/twin/${follow.leader}`} className="link-volt font-mono text-xl normal-case">
             {formatAddress(follow.leader)}
           </Link>
         </h2>
@@ -121,7 +121,7 @@ function FollowCard({ follow }: { follow: FollowView }) {
 
       <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_2fr]">
         <section>
-          <h3 className="font-mono text-[0.7rem] uppercase tracking-widest text-ink-soft">Holdings</h3>
+          <h3 className="font-mono text-[0.68rem] uppercase tracking-[0.18em] text-ink-soft">Holdings</h3>
           <ul className="mt-2 space-y-1 font-mono text-sm">
             <li className="flex justify-between">
               <span>Paper cash</span>
@@ -137,7 +137,7 @@ function FollowCard({ follow }: { follow: FollowView }) {
           <p className="mt-2 text-xs text-ink-soft">Positions marked at the leader&apos;s last traded price.</p>
         </section>
         <section>
-          <h3 className="font-mono text-[0.7rem] uppercase tracking-widest text-ink-soft">Recent paper trades</h3>
+          <h3 className="font-mono text-[0.68rem] uppercase tracking-[0.18em] text-ink-soft">Recent paper trades</h3>
           {follow.recentTrades.length === 0 ? (
             <p className="mt-2 text-sm text-ink-soft">Waiting for the leader&apos;s next swap.</p>
           ) : (
@@ -162,8 +162,8 @@ function FollowCard({ follow }: { follow: FollowView }) {
 function Fact({ label, value, className = "" }: { label: string; value: string; className?: string }) {
   return (
     <div>
-      <dt className="font-mono text-[0.65rem] uppercase tracking-widest text-ink-soft">{label}</dt>
-      <dd className={`mt-0.5 font-display text-lg font-bold tabular-nums ${className}`}>{value}</dd>
+      <dt className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-ink-soft">{label}</dt>
+      <dd className={`mt-0.5 font-mono text-base font-medium tabular-nums ${className}`}>{value}</dd>
     </div>
   );
 }

@@ -115,8 +115,8 @@ export function SyncPanel() {
 
   return (
     <section aria-labelledby="sync-heading" className="mt-10">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink pb-3">
-        <h2 id="sync-heading" className="font-mono text-xs uppercase tracking-widest text-ink-soft">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-rule pb-3">
+        <h2 id="sync-heading" className="hud-label">
           {isRunning ? "Sync in progress" : isDone ? "Last sync complete" : status?.run?.status === "failed" ? "Sync failed" : "Ready"}
         </h2>
         {status && <MemoryBadge backend={status.memory.backend} />}
@@ -127,25 +127,37 @@ export function SyncPanel() {
           const state = status ? stageState(status, stage.key) : "waiting";
           const info = status ? detail(status, stage.key) : null;
           return (
-            <li key={stage.key} className="grid grid-cols-[3rem_1fr] gap-4 border-b border-rule py-5 last:border-b-0">
+            <li
+              key={stage.key}
+              className={`relative grid grid-cols-[3.5rem_1fr] gap-4 border-b border-rule/60 py-5 pl-3 transition-colors duration-300 last:border-b-0 ${
+                state === "active" ? "bg-signal/5" : ""
+              }`}
+            >
               <span
                 aria-hidden
-                className={`font-display text-4xl font-black leading-none tabular-nums transition-colors duration-300 ${
-                  state === "done" ? "text-ink" : state === "active" ? "text-signal" : "text-rule"
+                className={`absolute inset-y-0 left-0 w-0.5 transition-colors duration-300 ${
+                  state === "done" ? "bg-gain" : state === "active" ? "bg-signal" : "bg-transparent"
+                }`}
+              />
+              <span
+                aria-hidden
+                className={`font-display text-4xl font-bold leading-none tabular-nums transition-colors duration-300 ${
+                  state === "done" ? "text-ink" : state === "active" ? "text-signal" : "numeral-outline"
                 }`}
               >
                 {String(index + 1).padStart(2, "0")}
               </span>
               <div>
-                <p className={`text-xl font-semibold ${state === "waiting" ? "text-ink-soft" : ""}`}>
+                <p className={`text-xl font-semibold uppercase tracking-wide ${state === "waiting" ? "text-ink-soft" : ""}`}>
                   {stage.title}
                   <span className="sr-only">: {state}</span>
                   {state === "active" && (
-                    <span className="ml-3 inline-block size-2 animate-pulse rounded-full bg-signal align-middle" aria-hidden />
+                    <span className="status-dot ml-3 align-middle text-signal" aria-hidden />
                   )}
                   {state === "done" && <span className="ml-3 font-mono text-sm text-gain" aria-hidden>✓</span>}
                 </p>
                 {info && <p className="mt-1 font-mono text-sm text-ink-soft">{info}</p>}
+                {state === "active" && <span aria-hidden className="scan-bar mt-3 block h-0.5 w-full max-w-sm bg-rule" />}
               </div>
             </li>
           );
@@ -163,13 +175,13 @@ export function SyncPanel() {
           <>
             <Link
               href="/twin/me"
-              className="rounded-sm bg-signal px-5 py-3 font-mono text-sm uppercase tracking-widest text-signal-ink shadow-[3px_3px_0_var(--ink)] transition-transform duration-150 hover:-translate-y-0.5"
+              className="btn btn-volt"
             >
               Talk to your twin →
             </Link>
             <Link
               href="/wrapped"
-              className="rounded-sm border border-ink px-5 py-3 font-mono text-sm uppercase tracking-widest transition-colors duration-150 hover:bg-ink hover:text-paper"
+              className="btn btn-ghost"
             >
               Your Wallet Wrapped
             </Link>
@@ -179,7 +191,7 @@ export function SyncPanel() {
           type="button"
           onClick={start}
           disabled={isRunning || isStarting}
-          className="px-2 py-3 font-mono text-xs uppercase tracking-widest text-ink-soft underline decoration-rule underline-offset-4 hover:text-ink disabled:opacity-50"
+          className="px-2 py-3 font-mono text-xs uppercase tracking-[0.18em] text-ink-soft underline decoration-rule underline-offset-4 transition-colors hover:text-signal hover:decoration-signal disabled:opacity-50"
         >
           {isStarting ? "Starting…" : "Sync new activity"}
         </button>

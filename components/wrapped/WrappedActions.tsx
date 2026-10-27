@@ -27,7 +27,7 @@ export function WrappedActions({ imagePath, shareUrl, shareText }: WrappedAction
       <a
         href={imagePath}
         download="wallet-wrapped.png"
-        className="rounded-sm bg-ink px-5 py-3 font-mono text-sm uppercase tracking-widest text-paper transition-transform duration-150 hover:-translate-y-0.5"
+        className="btn btn-ghost"
       >
         Download PNG
       </a>
@@ -35,14 +35,14 @@ export function WrappedActions({ imagePath, shareUrl, shareText }: WrappedAction
         href={intent}
         target="_blank"
         rel="noopener noreferrer"
-        className="rounded-sm bg-signal px-5 py-3 font-mono text-sm uppercase tracking-widest text-signal-ink shadow-[3px_3px_0_var(--ink)] transition-transform duration-150 hover:-translate-y-0.5"
+        className="btn btn-volt"
       >
         Share on X
       </a>
       <button
         type="button"
         onClick={copyLink}
-        className="rounded-sm border border-ink px-5 py-3 font-mono text-sm uppercase tracking-widest transition-colors duration-150 hover:bg-ink hover:text-paper"
+        className="btn btn-ghost"
       >
         {copied ? "Link copied" : "Copy link"}
       </button>

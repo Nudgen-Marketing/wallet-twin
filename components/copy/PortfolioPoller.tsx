@@ -46,7 +46,7 @@ export function PortfolioPoller() {
         type="button"
         onClick={poll}
         disabled={isPolling}
-        className="rounded-sm border border-ink px-4 py-2 font-mono text-xs uppercase tracking-widest transition-colors duration-150 hover:bg-ink hover:text-paper disabled:opacity-50"
+        className={`btn btn-ghost btn-sm ${isPolling ? "scan-bar" : ""}`}
       >
         {isPolling ? "Checking Tatum…" : "Check for new trades"}
       </button>

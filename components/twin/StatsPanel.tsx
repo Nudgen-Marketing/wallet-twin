@@ -1,5 +1,6 @@
 import type { TwinStats } from "@/lib/trades/stats";
 import { formatDate, formatDuration, formatPercent, formatUsd } from "@/lib/twin/format";
+import { stagger } from "@/lib/ui/stagger";
 
 interface StatsPanelProps {
   stats: TwinStats;
@@ -9,9 +10,10 @@ interface StatsPanelProps {
 function Figure({ label, value, tone, note }: { label: string; value: string; tone?: "gain" | "loss"; note?: string }) {
   const color = tone === "gain" ? "text-gain" : tone === "loss" ? "text-loss" : "text-ink";
   return (
-    <div className="border-t border-ink pt-3">
-      <dt className="font-mono text-[0.7rem] uppercase tracking-widest text-ink-soft">{label}</dt>
-      <dd className={`mt-1 font-display text-4xl font-black tabular-nums tracking-tight ${color}`}>{value}</dd>
+    <div className="relative border-t border-rule pt-3">
+      <span aria-hidden className="absolute -top-px left-0 h-0.5 w-6 bg-signal" />
+      <dt className="font-mono text-[0.68rem] uppercase tracking-[0.18em] text-ink-soft">{label}</dt>
+      <dd className={`mt-1 font-display text-4xl font-bold tabular-nums tracking-tight ${color}`}>{value}</dd>
       {note && <dd className="mt-1 font-mono text-xs text-ink-soft">{note}</dd>}
     </div>
   );
@@ -22,8 +24,8 @@ export function StatsPanel({ stats, historyFromMs }: StatsPanelProps) {
   const maxTrades = Math.max(1, ...stats.favoriteTokens.map((token) => token.trades));
 
   return (
-    <section aria-labelledby="stats-heading">
-      <h2 id="stats-heading" className="font-mono text-xs uppercase tracking-widest text-signal">
+    <section aria-labelledby="stats-heading" className="panel p-6">
+      <h2 id="stats-heading" className="hud-label">
         The numbers
       </h2>
       <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-6">
@@ -46,19 +48,22 @@ export function StatsPanel({ stats, historyFromMs }: StatsPanelProps) {
         />
       </dl>
 
-      <div className="mt-8 border-t border-ink pt-3">
-        <h3 className="font-mono text-[0.7rem] uppercase tracking-widest text-ink-soft">Favorite tokens</h3>
+      <div className="mt-8 border-t border-rule pt-3">
+        <h3 className="font-mono text-[0.68rem] uppercase tracking-[0.18em] text-ink-soft">Favorite tokens</h3>
         {stats.favoriteTokens.length === 0 ? (
           <p className="mt-2 text-ink-soft">No swaps yet.</p>
         ) : (
           <ul className="mt-3 space-y-2">
-            {stats.favoriteTokens.map((token) => (
+            {stats.favoriteTokens.map((token, index) => (
               <li key={token.coinType} className="grid grid-cols-[5rem_1fr_3rem] items-center gap-3 font-mono text-sm">
                 <span className="truncate" title={token.coinType}>
                   {token.symbol ?? "?"}
                 </span>
-                <span className="h-2 bg-paper-deep" aria-hidden>
-                  <span className="block h-full bg-ink" style={{ width: `${(token.trades / maxTrades) * 100}%` }} />
+                <span className="h-2 bg-paper-raised" aria-hidden>
+                  <span
+                    className="bar-fill block h-full bg-signal shadow-[0_0_10px_var(--signal)]"
+                    style={{ ...stagger(index), width: `${(token.trades / maxTrades) * 100}%` }}
+                  />
                 </span>
                 <span className="text-right tabular-nums text-ink-soft">{token.trades}</span>
               </li>

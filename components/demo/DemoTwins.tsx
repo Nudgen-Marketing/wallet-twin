@@ -15,25 +15,29 @@ export async function DemoTwins() {
 
   return (
     <section aria-labelledby="demo-heading" className="mx-auto max-w-6xl px-4 pb-[var(--space-section)] sm:px-8">
-      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-ink pb-2">
-        <h2 id="demo-heading" className="font-display text-3xl font-bold">
-          No wallet handy? Try a demo twin
-        </h2>
-        <span className="font-mono text-xs uppercase tracking-widest text-ink-soft">Real Sui mainnet wallets</span>
-      </div>
-      <ul className="mt-6 grid gap-6 md:grid-cols-2">
+      <p className="kicker">Real Sui mainnet wallets</p>
+      <h2 id="demo-heading" className="fringe mt-4 font-display text-4xl font-bold uppercase tracking-tight sm:text-5xl">
+        No wallet handy? Try a demo twin
+      </h2>
+      <ul className="mt-8 grid gap-5 md:grid-cols-2">
         {seeded.map((wallet) => {
           const entry = entries.find((row) => row.address === wallet.address);
           return (
-            <li key={wallet.address} className="border-2 border-ink bg-paper p-5 shadow-[5px_5px_0_var(--ink)]">
-              <p className="font-mono text-xs uppercase tracking-widest text-signal">{wallet.label}</p>
-              <p className="mt-1 font-mono text-sm">{formatAddress(wallet.address)}</p>
+            <li key={wallet.address} className="reveal panel panel-interactive group p-6">
+              <div className="flex items-center justify-between gap-3">
+                <p className="sandy-group font-mono text-xs uppercase tracking-[0.2em] text-signal">{wallet.label}</p>
+                <span className="flex items-center gap-2 font-mono text-[0.65rem] uppercase tracking-[0.2em] text-gain">
+                  <span className="status-dot" aria-hidden />
+                  Live
+                </span>
+              </div>
+              <p className="mt-2 font-mono text-sm text-ink-soft">{formatAddress(wallet.address)}</p>
               {entry?.headline && <p className="mt-3 leading-relaxed text-ink-soft">{entry.headline}</p>}
-              <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div className="mt-5 flex flex-wrap items-center gap-4">
                 <DemoLoginButton address={wallet.address} />
                 <Link
                   href={`/twin/${wallet.address}`}
-                  className="text-sm underline decoration-signal decoration-2 underline-offset-4"
+                  className="link-volt text-sm"
                 >
                   Public page
                 </Link>

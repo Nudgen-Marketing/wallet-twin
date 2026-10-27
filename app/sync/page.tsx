@@ -6,8 +6,8 @@ import { getSession } from "@/lib/auth/session";
 export default function SyncPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-16 sm:px-8">
-      <p className="font-mono text-xs uppercase tracking-widest text-signal">Sync</p>
-      <h1 className="mt-3 font-display text-5xl font-black tracking-tight sm:text-6xl">Building your twin</h1>
+      <p className="kicker">Sync</p>
+      <h1 className="mt-3 fringe font-display text-5xl font-bold uppercase tracking-tight sm:text-6xl">Building your twin</h1>
       <Suspense fallback={<p className="mt-6 text-ink-soft">Checking your session…</p>}>
         <SessionGate />
       </Suspense>

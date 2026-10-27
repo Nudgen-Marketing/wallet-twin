@@ -21,7 +21,7 @@ const SUGGESTIONS = [
 export default function MyTwinPage() {
   return (
     <main className="mx-auto max-w-6xl px-4 py-12 sm:px-8">
-      <p className="font-mono text-xs uppercase tracking-widest text-signal">My twin</p>
+      <p className="kicker">My twin</p>
       <Suspense fallback={<p className="mt-6 text-ink-soft">Waking your twin…</p>}>
         <MyTwin />
       </Suspense>
@@ -34,7 +34,7 @@ async function MyTwin() {
   if (!session) {
     return (
       <>
-        <h1 className="mt-3 font-display text-5xl font-black tracking-tight">Your twin is waiting</h1>
+        <h1 className="mt-3 fringe font-display text-5xl font-bold uppercase tracking-tight">Your twin is waiting</h1>
         <p className="mt-6 text-lg text-ink-soft">Connect your wallet and sign in (top right) to meet it.</p>
       </>
     );
@@ -49,10 +49,10 @@ async function MyTwin() {
   if (!state) {
     return (
       <>
-        <h1 className="mt-3 font-display text-5xl font-black tracking-tight">No twin yet</h1>
+        <h1 className="mt-3 fringe font-display text-5xl font-bold uppercase tracking-tight">No twin yet</h1>
         <p className="mt-6 text-lg text-ink-soft">
           Your twin is built from your history.{" "}
-          <Link href="/sync" className="text-ink underline decoration-signal decoration-2 underline-offset-4">
+          <Link href="/sync" className="link-volt">
             Sync your wallet
           </Link>{" "}
           first. It takes about a minute.
@@ -64,12 +64,12 @@ async function MyTwin() {
   return (
     <>
       <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
-        <h1 className="font-display text-5xl font-black tracking-tight sm:text-6xl">
-          Twin of <span className="block font-mono text-3xl font-medium sm:inline sm:text-4xl">{formatAddress(session.address)}</span>
+        <h1 className="fringe font-display text-5xl font-bold uppercase tracking-tight sm:text-6xl">
+          Twin of <span className="block font-mono text-3xl font-medium normal-case text-signal sm:inline sm:text-4xl">{formatAddress(session.address)}</span>
         </h1>
         <div className="flex items-center gap-3">
           <MemoryBadge backend={memoryBackendName()} />
-          <Link href="/sync" className="font-mono text-xs uppercase tracking-widest text-ink-soft underline underline-offset-4 hover:text-ink">
+          <Link href="/sync" className="btn btn-ghost btn-sm">
             Re-sync
           </Link>
         </div>
@@ -81,7 +81,7 @@ async function MyTwin() {
         </div>
         <div>
           {session.demo && (
-            <p className="mb-4 border-l-4 border-signal pl-3 text-sm text-ink-soft">
+            <p className="mb-4 border-l-2 border-signal bg-signal/5 py-2 pl-4 pr-3 text-sm text-ink-soft">
               Demo mode: you&apos;re exploring a seeded mainnet wallet. Chat works, but nothing you say is remembered,
               because this demo is shared with every visitor.
             </p>

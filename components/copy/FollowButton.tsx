@@ -41,11 +41,7 @@ export function FollowButton({ leader, initialFollowing, isSignedIn, isOwner }: 
           type="button"
           onClick={toggle}
           disabled={isSaving}
-          className={`rounded-sm px-5 py-3 font-mono text-sm uppercase tracking-widest transition-transform duration-150 hover:-translate-y-0.5 disabled:opacity-50 ${
-            following
-              ? "border border-ink"
-              : "bg-signal text-signal-ink shadow-[3px_3px_0_var(--ink)]"
-          }`}
+          className={`btn ${following ? "btn-ghost" : "btn-volt"}`}
         >
           {isSaving ? "Saving…" : following ? "Stop paper-copying" : "Paper-copy this twin · $1,000 simulated"}
         </button>
@@ -53,11 +49,11 @@ export function FollowButton({ leader, initialFollowing, isSignedIn, isOwner }: 
         <p className="text-sm text-ink-soft">Sign in to paper-copy this twin with $1,000 of simulated funds.</p>
       )}
       {following && (
-        <Link href="/portfolio" className="text-sm underline decoration-signal decoration-2 underline-offset-4">
+        <Link href="/portfolio" className="link-volt text-sm">
           See your paper portfolio →
         </Link>
       )}
-      <span className="font-mono text-[0.7rem] uppercase tracking-widest text-ink-soft">
+      <span className="font-mono text-[0.68rem] uppercase tracking-[0.18em] text-ink-soft">
         Simulated · no real trades · 0.5% paper fee
       </span>
       {error && (

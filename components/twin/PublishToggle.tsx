@@ -35,15 +35,16 @@ export function PublishToggle({ address, initialPublished, isDemo = false }: Pub
   }
 
   return (
-    <section aria-labelledby="publish-heading" className="border-2 border-ink p-5">
+    <section aria-labelledby="publish-heading" className={`panel p-6 ${published ? "panel-hot" : ""}`}>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="publish-heading" className="font-display text-2xl font-bold">
+        <h2 id="publish-heading" className="font-display text-2xl font-semibold uppercase tracking-wide">
           {published ? "Your twin is public" : "Your twin is private"}
         </h2>
         <span
-          className={`font-mono text-[0.7rem] uppercase tracking-widest ${published ? "text-gain" : "text-ink-soft"}`}
+          className={`flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.18em] ${published ? "text-gain" : "text-ink-soft"}`}
         >
-          {published ? "● On the leaderboard" : "○ Only you can see it"}
+          {published && <span className="status-dot" aria-hidden />}
+          {published ? "On the leaderboard" : "○ Only you can see it"}
         </span>
       </div>
       <p className="mt-3 text-sm leading-relaxed text-ink-soft">
@@ -58,14 +59,12 @@ export function PublishToggle({ address, initialPublished, isDemo = false }: Pub
           onClick={toggle}
           disabled={isSaving || (isDemo && published)}
           title={isDemo && published ? "Demo twins stay public so everyone can try them." : undefined}
-          className={`rounded-sm px-4 py-2 font-mono text-xs uppercase tracking-widest transition-colors duration-150 disabled:opacity-50 ${
-            published ? "border border-ink hover:bg-ink hover:text-paper" : "bg-ink text-paper hover:bg-signal hover:text-signal-ink"
-          }`}
+          className={`btn btn-sm ${published ? "btn-ghost" : "btn-volt"}`}
         >
           {isSaving ? "Saving…" : published ? "Unpublish" : "Publish my twin"}
         </button>
         {published && (
-          <Link href={`/twin/${address}`} className="text-sm underline decoration-signal decoration-2 underline-offset-4">
+          <Link href={`/twin/${address}`} className="link-volt text-sm">
             View public page →
           </Link>
         )}

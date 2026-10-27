@@ -95,16 +95,18 @@ function SignInFlow() {
       <div className="flex items-center gap-2">
         {isSignedIn && sessionAddress ? (
           <>
-            <span className="font-mono text-xs text-ink-soft" title={sessionAddress}>
-              <span className="mr-1.5 inline-block size-2 rounded-full bg-gain align-middle" aria-hidden />
+            <span className="flex items-center font-mono text-xs text-ink" title={sessionAddress}>
+              <span className="status-dot mr-2 text-gain" aria-hidden />
               {formatAddress(sessionAddress)}
-              {isDemo && <span className="ml-2 rounded-sm bg-signal px-1.5 py-0.5 text-signal-ink">Demo</span>}
+              {isDemo && (
+                <span className="ml-2 bg-signal px-1.5 py-0.5 text-[0.65rem] uppercase tracking-[0.15em] text-signal-ink">Demo</span>
+              )}
             </span>
             <button
               type="button"
               onClick={handleSignOut}
               disabled={status !== "idle"}
-              className="rounded-sm border border-ink px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors duration-150 hover:bg-ink hover:text-paper disabled:opacity-50"
+              className="btn btn-ghost btn-sm"
             >
               {status === "signing-out" ? "Signing out…" : "Sign out"}
             </button>
@@ -117,7 +119,7 @@ function SignInFlow() {
                 type="button"
                 onClick={handleSignIn}
                 disabled={status !== "idle"}
-                className="rounded-sm bg-signal px-4 py-2 font-mono text-xs uppercase tracking-widest text-signal-ink shadow-[3px_3px_0_var(--ink)] transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0 active:shadow-none disabled:opacity-60"
+                className="btn btn-volt btn-sm"
               >
                 {status === "signing"
                   ? "Check your wallet…"

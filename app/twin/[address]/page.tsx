@@ -19,7 +19,7 @@ const SUGGESTIONS = [
 export default function PublicTwinPage(props: PageProps<"/twin/[address]">) {
   return (
     <main className="mx-auto max-w-6xl px-4 py-12 sm:px-8">
-      <p className="font-mono text-xs uppercase tracking-widest text-signal">Public twin</p>
+      <p className="kicker">Public twin</p>
       <Suspense fallback={<p className="mt-6 text-ink-soft">Finding this twin…</p>}>
         <PublicTwin params={props.params} />
       </Suspense>
@@ -40,11 +40,11 @@ async function PublicTwin({ params }: { params: PageProps<"/twin/[address]">["pa
 
   return (
     <>
-      <h1 className="mt-3 font-display text-5xl font-black tracking-tight sm:text-6xl">
-        Twin of <span className="block font-mono text-3xl font-medium sm:inline sm:text-4xl">{formatAddress(address)}</span>
+      <h1 className="mt-3 fringe font-display text-5xl font-bold uppercase tracking-tight sm:text-6xl">
+        Twin of <span className="block font-mono text-3xl font-medium normal-case text-signal sm:inline sm:text-4xl">{formatAddress(address)}</span>
       </h1>
       {twin.profile && (
-        <p className="mt-6 max-w-3xl font-display text-2xl leading-snug sm:text-3xl">
+        <p className="rise mt-6 max-w-3xl border-l-2 border-signal pl-5 font-display text-2xl font-light leading-snug sm:text-3xl">
           <span className="text-signal">“</span>
           {twin.profile}
           <span className="text-signal">”</span>
@@ -80,13 +80,13 @@ async function PublicTwin({ params }: { params: PageProps<"/twin/[address]">["pa
 function MemoryList({ title, items, empty }: { title: string; items: string[]; empty: string }) {
   return (
     <section>
-      <h2 className="font-mono text-xs uppercase tracking-widest text-signal">{title}</h2>
+      <h2 className="hud-label">{title}</h2>
       {items.length === 0 ? (
         <p className="mt-3 text-ink-soft">{empty}</p>
       ) : (
         <ul className="mt-3 space-y-3">
           {items.map((item) => (
-            <li key={item} className="border-l-4 border-ink pl-3 leading-relaxed">
+            <li key={item} className="reveal border-l-2 border-cyan bg-paper-deep/60 py-2 pl-4 pr-3 leading-relaxed">
               {item}
             </li>
           ))}

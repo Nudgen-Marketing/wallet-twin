@@ -22,27 +22,35 @@ function tone(value: number | null): string {
 export function LeaderboardTable({ rows, compact = false }: LeaderboardTableProps) {
   if (rows.length === 0) {
     return (
-      <p className="mt-6 max-w-lg text-ink-soft">
+      <p className="panel mt-6 max-w-lg p-5 text-ink-soft">
         No public twins yet. Sync your wallet and publish yours to be the first on the board.
       </p>
     );
   }
 
   return (
-    <ol className="mt-4 divide-y divide-rule border-y border-ink">
+    <ol className="mt-8 border-y border-rule">
       {rows.map((row) => (
-        <li key={row.address}>
+        <li key={row.address} className="reveal border-b border-rule/60 last:border-b-0">
           <Link
             href={`/twin/${row.address}`}
-            className="group grid grid-cols-[3rem_1fr] items-baseline gap-x-4 gap-y-2 py-5 transition-colors duration-150 hover:bg-paper-deep/60 sm:grid-cols-[4rem_minmax(0,1fr)_repeat(3,7rem)]"
+            className="group relative grid grid-cols-[3rem_1fr] items-baseline gap-x-4 gap-y-2 px-3 py-5 transition-colors duration-200 hover:bg-paper-deep/80 sm:grid-cols-[4rem_minmax(0,1fr)_repeat(3,7rem)] sm:px-4"
           >
-            <span className="font-display text-4xl font-black tabular-nums leading-none text-ink-soft transition-colors duration-150 group-hover:text-signal">
-              {row.rank}
+            <span
+              aria-hidden
+              className="absolute inset-y-0 left-0 w-1 origin-top scale-y-0 bg-signal transition-transform duration-300 ease-[var(--ease-out-expo)] group-hover:scale-y-100"
+            />
+            <span
+              className={`sandy-group font-display text-4xl font-bold tabular-nums leading-none transition-colors duration-150 ${
+                row.rank <= 3 ? "text-signal" : "numeral-outline group-hover:text-signal"
+              }`}
+            >
+              {String(row.rank).padStart(2, "0")}
             </span>
             <span className="min-w-0">
-              <span className="font-mono text-sm">{formatAddress(row.address)}</span>
+              <span className="font-mono text-sm transition-colors duration-150 group-hover:text-signal">{formatAddress(row.address)}</span>
               {row.favoriteToken && (
-                <span className="ml-2 font-mono text-xs uppercase tracking-widest text-signal">{row.favoriteToken}</span>
+                <span className="ml-3 bg-signal/10 px-1.5 py-0.5 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-signal">{row.favoriteToken}</span>
               )}
               {!compact && row.headline && (
                 <span className="mt-1 block truncate text-ink-soft group-hover:text-ink">{row.headline}</span>
@@ -65,8 +73,8 @@ export function LeaderboardTable({ rows, compact = false }: LeaderboardTableProp
 function Metric({ label, value, className = "" }: { label: string; value: string; className?: string }) {
   return (
     <span className="col-start-2 flex items-baseline justify-between gap-2 sm:col-start-auto sm:block sm:text-right">
-      <span className="font-mono text-[0.65rem] uppercase tracking-widest text-ink-soft sm:block">{label}</span>
-      <span className={`font-display text-xl font-bold tabular-nums ${className}`}>{value}</span>
+      <span className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-ink-soft sm:block">{label}</span>
+      <span className={`font-mono text-lg font-medium tabular-nums ${className}`}>{value}</span>
     </span>
   );
 }

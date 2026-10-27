@@ -18,7 +18,7 @@ export function NavLinks() {
 /** Plain list: also the Suspense fallback, rendered without an active link. */
 export function NavList({ activePath }: { activePath: string | null }) {
   return (
-    <ul className="flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs uppercase tracking-widest text-ink-soft">
+    <ul className="flex flex-wrap gap-x-1 gap-y-1 font-mono text-[0.72rem] uppercase tracking-[0.18em]">
       {NAV_LINKS.map((link) => {
         const isActive = activePath === link.href;
         return (
@@ -26,11 +26,17 @@ export function NavList({ activePath }: { activePath: string | null }) {
             <Link
               href={link.href}
               aria-current={isActive ? "page" : undefined}
-              className={`underline-offset-4 transition-colors duration-150 hover:text-ink hover:underline hover:decoration-signal hover:decoration-2 ${
-                isActive ? "text-ink underline decoration-signal decoration-2" : ""
+              className={`group relative block px-2.5 py-1.5 transition-colors duration-150 ${
+                isActive ? "text-signal" : "text-ink-soft hover:text-ink"
               }`}
             >
-              {link.label}
+              <span
+                aria-hidden
+                className={`absolute inset-x-2.5 bottom-0 h-0.5 origin-left bg-signal transition-transform duration-300 ease-[var(--ease-out-expo)] ${
+                  isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                }`}
+              />
+              <span className="sandy-group inline-block">{link.label}</span>
             </Link>
           </li>
         );

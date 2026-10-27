@@ -44,20 +44,19 @@ async function SharedWrapped(props: Props) {
   if (!shared) notFound();
   return (
     <>
-      <p className="font-mono text-xs uppercase tracking-widest text-signal">Shared Wallet Wrapped</p>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={shared.imageUrl}
-        alt="Wallet Wrapped card"
-        width={1200}
-        height={630}
-        className="mt-6 h-auto w-full border-2 border-ink shadow-[8px_8px_0_var(--ink)]"
-      />
+      <p className="kicker">Shared Wallet Wrapped</p>
+      <figure className="hud-frame rise mt-6 p-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={shared.imageUrl}
+          alt="Wallet Wrapped card"
+          width={1200}
+          height={630}
+          className="h-auto w-full border border-rule"
+        />
+      </figure>
       <div className="mt-10 flex flex-wrap items-center gap-4">
-        <Link
-          href="/"
-          className="rounded-sm bg-signal px-5 py-3 font-mono text-sm uppercase tracking-widest text-signal-ink shadow-[3px_3px_0_var(--ink)]"
-        >
+        <Link href="/" className="btn btn-volt">
           Make your own twin →
         </Link>
         <p className="text-sm text-ink-soft">Estimates from on-chain data. Not financial advice.</p>

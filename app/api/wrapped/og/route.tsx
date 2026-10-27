@@ -16,9 +16,9 @@ export async function GET(request: NextRequest) {
 
   const [card, ...fonts] = await Promise.all([
     buildWrappedCard(address),
-    loadFont("Fraunces", 900),
-    loadFont("Fraunces", 400, "italic"),
-    loadFont("IBM Plex Mono", 500),
+    loadFont("Chakra Petch", 700),
+    loadFont("Chakra Petch", 400),
+    loadFont("JetBrains Mono", 500),
   ]);
 
   return new ImageResponse(<WrappedCardImage card={card} />, {

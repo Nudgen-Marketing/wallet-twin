@@ -32,7 +32,7 @@ export function DemoLoginButton({ address }: DemoLoginButtonProps) {
         type="button"
         onClick={explore}
         disabled={isLoading}
-        className="rounded-sm bg-ink px-4 py-2 font-mono text-xs uppercase tracking-widest text-paper transition-colors duration-150 hover:bg-signal hover:text-signal-ink disabled:opacity-50"
+        className="btn btn-volt btn-sm"
       >
         {isLoading ? "Opening…" : "Explore as this wallet"}
       </button>
