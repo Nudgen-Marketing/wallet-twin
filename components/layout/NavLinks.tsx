@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { href: "/twin/me", label: "My twin" },
   { href: "/wrapped", label: "Wrapped" },
   { href: "/portfolio", label: "Paper portfolio" },
+  { href: "/connect", label: "Agents" },
 ] as const;
 
 /** Active-link styling needs the request path, so this suspends during prerender. */

@@ -25,6 +25,8 @@ interface ToolSpec<I extends z.ZodObject, O extends z.ZodObject> {
 
 export interface McpTool {
   name: string;
+  title: string;
+  description: string;
   access: ToolAccess;
   register: (server: McpServer, principal: McpPrincipal) => void;
 }
@@ -65,6 +67,8 @@ export function defineTool<I extends z.ZodObject, O extends z.ZodObject>(spec: T
 
   return {
     name: spec.name,
+    title: spec.title,
+    description: spec.description,
     access: spec.access,
     register: (server, principal) => {
       // Widened to a concrete schema type so the SDK's conditional callback type resolves.
