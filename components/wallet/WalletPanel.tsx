@@ -65,14 +65,15 @@ function SignInFlow() {
       });
       const session = await verifySignIn({ address: walletAddress, nonce, signature });
       setSessionAddress(session.address);
-      router.push("/sync");
+      // Signing in mid-OAuth must return to the consent screen, not start a sync.
+      if (!pathname.startsWith("/oauth/")) router.push("/sync");
       router.refresh();
     } catch (caught: unknown) {
       setError(describeError(caught));
     } finally {
       setStatus("idle");
     }
-  }, [kit, router, walletAddress]);
+  }, [kit, pathname, router, walletAddress]);
 
   const handleSignOut = useCallback(async () => {
     setStatus("signing-out");

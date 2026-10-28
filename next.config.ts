@@ -6,6 +6,20 @@ const nextConfig: NextConfig = {
   output: "standalone",
   cacheComponents: true,
   partialPrefetching: true,
+  async headers() {
+    return [
+      {
+        // The OAuth consent screen must never be framed (clickjacking an "Allow" click).
+        source: "/oauth/:path*",
+        headers: [
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "X-Frame-Options", value: "DENY" },
+          // same-origin, not no-referrer: no-referrer makes the consent POST send `Origin: null`.
+          { key: "Referrer-Policy", value: "same-origin" },
+        ],
+      },
+    ];
+  },
   turbopack: {
     rules: {
       "*.css": {
