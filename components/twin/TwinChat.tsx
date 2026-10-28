@@ -2,7 +2,10 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
+
+/** Distance from the bottom, in px, within which the log keeps following new text. */
+const FOLLOW_THRESHOLD_PX = 120;
 
 interface TwinChatProps {
   api: string;
@@ -17,10 +20,25 @@ export function TwinChat({ api, audience, suggestions, twinName }: TwinChatProps
   const { messages, sendMessage, status, error } = useChat({ transport });
   const [input, setInput] = useState("");
   const isBusy = status === "submitted" || status === "streaming";
+  const logRef = useRef<HTMLDivElement>(null);
+  const isFollowingRef = useRef(true);
+
+  // Keep the newest reply in view while it streams, unless the reader scrolled up to reread.
+  useEffect(() => {
+    const log = logRef.current;
+    if (log && isFollowingRef.current) log.scrollTop = log.scrollHeight;
+  }, [messages, status]);
+
+  function handleScroll() {
+    const log = logRef.current;
+    if (!log) return;
+    isFollowingRef.current = log.scrollHeight - log.scrollTop - log.clientHeight < FOLLOW_THRESHOLD_PX;
+  }
 
   function send(text: string) {
     const trimmed = text.trim();
     if (!trimmed || isBusy) return;
+    isFollowingRef.current = true;
     void sendMessage({ text: trimmed });
     setInput("");
   }
@@ -31,7 +49,7 @@ export function TwinChat({ api, audience, suggestions, twinName }: TwinChatProps
   }
 
   return (
-    <section aria-label={`Chat with ${twinName}`} className="panel panel-hot flex min-h-[34rem] flex-col">
+    <section aria-label={`Chat with ${twinName}`} className="panel panel-hot flex h-[min(46rem,calc(100dvh-6rem))] min-h-[26rem] flex-col lg:h-[min(48rem,calc(100dvh-14rem))]">
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-rule bg-paper-raised/60 px-5 py-3">
         <p className="flex items-center gap-2.5 font-display text-lg font-semibold uppercase tracking-wide">
           <span className={`status-dot ${isBusy ? "text-signal" : "text-gain"}`} aria-hidden />
@@ -42,7 +60,12 @@ export function TwinChat({ api, audience, suggestions, twinName }: TwinChatProps
         </p>
       </header>
 
-      <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5" aria-live="polite">
+      <div
+        ref={logRef}
+        onScroll={handleScroll}
+        className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 py-5"
+        aria-live="polite"
+      >
         {messages.length === 0 && (
           <div>
             <p className="text-ink-soft">
@@ -88,7 +111,7 @@ export function TwinChat({ api, audience, suggestions, twinName }: TwinChatProps
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="flex gap-2 border-t border-rule p-3">
+      <form onSubmit={handleSubmit} className="flex shrink-0 gap-2 border-t border-rule p-3">
         <label htmlFor="twin-chat-input" className="sr-only">
           Message your twin
         </label>
@@ -108,7 +131,7 @@ export function TwinChat({ api, audience, suggestions, twinName }: TwinChatProps
           Ask
         </button>
       </form>
-      <p className="border-t border-rule px-5 py-2 text-[0.7rem] text-ink-soft">
+      <p className="shrink-0 border-t border-rule px-5 py-2 text-[0.7rem] text-ink-soft">
         Not financial advice. Answers come from on-chain data and memories, and can be wrong.
       </p>
     </section>

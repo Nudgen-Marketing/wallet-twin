@@ -75,11 +75,11 @@ async function MyTwin() {
         </div>
       </div>
       <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-        <div className="space-y-10 lg:sticky lg:top-8 lg:self-start">
+        <div className="space-y-10">
           <StatsPanel stats={snapshot.stats} historyFromMs={state.historyFromMs?.getTime() ?? null} />
           <PublishToggle address={session.address} initialPublished={published} isDemo={session.demo} />
         </div>
-        <div>
+        <div className="lg:sticky lg:top-36 lg:self-start">
           {session.demo && (
             <p className="mb-4 border-l-2 border-signal bg-signal/5 py-2 pl-4 pr-3 text-sm text-ink-soft">
               Demo mode: you&apos;re exploring a seeded mainnet wallet. Chat works, but nothing you say is remembered,
