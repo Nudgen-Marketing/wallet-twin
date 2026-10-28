@@ -1,9 +1,8 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth/session";
-import { db } from "@/lib/db";
 import { fail, isSameOrigin, ok, readJson } from "@/lib/http/api";
-import { publishTwin, unpublishTwin } from "@/lib/twin/publish";
+import { setPublished, TwinActionError } from "@/lib/twin/actions";
 
 const bodySchema = z.object({ publish: z.boolean() });
 
@@ -15,14 +14,11 @@ export async function POST(request: NextRequest) {
   const parsed = bodySchema.safeParse(await readJson(request));
   if (!parsed.success) return fail("Malformed request.", 400);
 
-  if (session.demo && !parsed.data.publish) return fail("Demo twins stay public so everyone can try them.", 403);
-
-  if (parsed.data.publish) {
-    const synced = await db.syncState.findUnique({ where: { address: session.address } });
-    if (!synced) return fail("Sync your wallet before publishing your twin.", 409);
-    await publishTwin(session.address);
-  } else {
-    await unpublishTwin(session.address);
+  try {
+    await setPublished(session, parsed.data.publish);
+  } catch (error: unknown) {
+    if (error instanceof TwinActionError) return fail(error.message, error.status);
+    throw error;
   }
   return ok({ published: parsed.data.publish });
 }

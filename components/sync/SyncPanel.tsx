@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import type { SyncStatus } from "@/app/api/sync/status/route";
+import type { SyncStatus } from "@/lib/sync/status";
 import { apiCall } from "@/lib/http/client";
 import { MemoryBadge } from "@/components/sync/MemoryBadge";
 
