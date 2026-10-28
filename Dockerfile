@@ -28,7 +28,7 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/generated ./generated
 COPY . .
-# public/ holds no tracked files yet, so a git checkout has no such directory; the runner stage copies it
+# The runner stage copies public/; make sure it exists even if the brand assets are ever removed
 RUN mkdir -p public
 
 # Build arguments for Next.js public environment variables

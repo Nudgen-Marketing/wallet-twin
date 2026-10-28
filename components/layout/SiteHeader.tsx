@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { NavLinks, NavList } from "@/components/layout/NavLinks";
 import { StatusTicker } from "@/components/layout/StatusTicker";
 import { WalletControls } from "@/components/wallet/WalletControls";
@@ -9,12 +10,7 @@ export function SiteHeader() {
     <header className="relative z-40 border-b border-rule bg-paper/85 backdrop-blur-md sm:sticky sm:top-0">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-3 sm:px-8">
         <Link href="/" className="group flex items-center gap-2.5" aria-label="WalletTwin home">
-          <span
-            aria-hidden
-            className="grid size-8 place-items-center bg-signal font-mono text-sm font-bold text-signal-ink transition-transform duration-300 [clip-path:polygon(0_0,100%_0,100%_70%,70%_100%,0_100%)] group-hover:rotate-90"
-          >
-            W
-          </span>
+          <BrandMark className="size-10 shrink-0 overflow-visible" />
           <span className="fringe sandy-group inline-block -skew-x-12 font-display text-xl font-bold uppercase tracking-[0.08em] text-signal">
             Wallet<span className="text-ink">{"//"}</span>Twin
           </span>
