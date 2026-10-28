@@ -12,7 +12,7 @@ test.describe("landing page", () => {
     await expect(topTwins.getByRole("link")).toHaveCount(3); // 2 twins + "Full leaderboard"
     await expect(topTwins).toContainText("+12.5%");
 
-    await expect(page.getByRole("contentinfo")).toContainText("Not financial advice.");
+    await expect(page.getByRole("contentinfo")).toContainText("Data via Tatum");
     await expect(connectButton(page)).toContainText("Connect wallet");
   });
 

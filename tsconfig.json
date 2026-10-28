@@ -36,7 +36,13 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts",
     "build/e2e/types/**/*.ts",
-    "build/e2e/dev/types/**/*.ts"
+    "build/e2e/dev/types/**/*.ts",
+    "build/verify/types/**/*.ts",
+    "build/verify/dev/types/**/*.ts",
+    "build/mcp-dev/types/**/*.ts",
+    "build/mcp-dev/dev/types/**/*.ts",
+    "build/e2e-3300/types/**/*.ts",
+    "build/e2e-3300/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
