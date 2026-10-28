@@ -4,7 +4,9 @@ import { registerTools, type McpTool } from "@/lib/mcp/define";
 import type { McpPrincipal } from "@/lib/mcp/principal";
 import { registerPrompts } from "@/lib/mcp/prompts";
 import { registerResources } from "@/lib/mcp/resources";
+import { ACTION_TOOLS } from "@/lib/mcp/tools/actions";
 import { PUBLIC_TOOLS } from "@/lib/mcp/tools/public";
+import { TWIN_TOOLS } from "@/lib/mcp/tools/twin";
 
 const INSTRUCTIONS = [
   "WalletTwin turns a Sui wallet's on-chain history (read through Tatum) into an AI twin whose memories live in Walrus Memory.",
@@ -12,7 +14,7 @@ const INSTRUCTIONS = [
   "Numbers are estimates: USD values can be unknown, and copy trading is simulated with paper money. Never present any of it as financial advice.",
 ].join(" ");
 
-export const ALL_TOOLS: readonly McpTool[] = [...PUBLIC_TOOLS];
+export const ALL_TOOLS: readonly McpTool[] = [...PUBLIC_TOOLS, ...TWIN_TOOLS, ...ACTION_TOOLS];
 
 /** A stateless MCP handler for one request, exposing only what this caller may use. */
 export function mcpHandlerFor(principal: McpPrincipal): (request: Request) => Promise<Response> {

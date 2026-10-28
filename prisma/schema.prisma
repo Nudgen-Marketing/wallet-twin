@@ -186,3 +186,83 @@ model PaperTrade {
   @@unique([followId, digest])
   @@index([followId, timestamp])
 }
+
+// ── Agent access (MCP) ──────────────────────────────────────────────────────
+// Every secret below is stored only as a SHA-256 hash.
+
+// An OAuth client: registered through DCR (id = random), or a CIMD client whose
+// id is the HTTPS URL of its metadata document (cached here).
+model OAuthClient {
+  id           String   @id
+  name         String
+  // JSON string[] of exact redirect URIs
+  redirectUris String
+  logoUri      String?
+  clientUri    String?
+  // dcr | cimd
+  source       String
+  fetchedAt    DateTime @default(now())
+  createdAt    DateTime @default(now())
+}
+
+// One wallet's consent to one client: a "connected app". Revoking it kills all its tokens.
+model OAuthGrant {
+  id         String    @id @default(cuid())
+  clientId   String
+  clientName String
+  address    String
+  demo       Boolean   @default(false)
+  // Space-separated scopes
+  scopes     String
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+
+  @@index([address])
+}
+
+// Single-use authorization code (PKCE S256), valid for a minute.
+model OAuthCode {
+  codeHash      String    @id
+  grantId       String
+  clientId      String
+  redirectUri   String
+  codeChallenge String
+  resource      String
+  scopes        String
+  expiresAt     DateTime
+  usedAt        DateTime?
+}
+
+model OAuthToken {
+  tokenHash String    @id
+  // access | refresh
+  kind      String
+  grantId   String
+  scopes    String
+  resource  String
+  expiresAt DateTime
+  revokedAt DateTime?
+  // Refresh tokens: set once rotated. Presenting a rotated token again revokes the grant.
+  rotatedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([grantId])
+}
+
+// Personal API key for scripts and headless agents.
+model ApiKey {
+  id            String    @id @default(cuid())
+  name          String
+  // First characters of the key, for recognizing it in the list (never enough to use it).
+  displayPrefix String
+  keyHash       String    @unique
+  address       String
+  scopes        String
+  expiresAt     DateTime?
+  lastUsedAt    DateTime?
+  revokedAt     DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([address])
+}

@@ -1,6 +1,9 @@
 import { beforeAll, describe, expect, test, vi } from "vitest";
 
-vi.mock("@/lib/copy/service", () => ({ backtestCopyReturnPct: async () => 8 }));
+vi.mock("@/lib/copy/service", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/copy/service")>()),
+  backtestCopyReturnPct: async () => 8,
+}));
 import { POST } from "@/app/api/mcp/public/route";
 import { db } from "@/lib/db";
 import { rememberTwin } from "@/lib/memory";

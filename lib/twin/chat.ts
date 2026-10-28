@@ -9,6 +9,7 @@ import {
   recallTwin,
   type RecalledMemory,
   rememberTwin,
+  type TwinMemoryEntry,
   walrusConfig,
 } from "@/lib/memory";
 import { namespaceFor } from "@/lib/memory/namespaces";
@@ -31,6 +32,15 @@ export function extractStatedFacts(text: string): string[] {
     .map((sentence) => sentence.trim())
     .filter((sentence) => sentence.length >= 12 && sentence.length <= 300 && !sentence.includes("?"))
     .filter((sentence) => /\b(i|i'm|i am|i've|my|me|mine)\b/i.test(sentence));
+}
+
+/** A fact the owner told their twin, keyed by its text so repeating it stores it once. */
+export function chatFactEntry(fact: string): TwinMemoryEntry {
+  return {
+    type: "chat",
+    key: `chat:${createHash("sha256").update(fact.toLowerCase()).digest("hex").slice(0, 32)}`,
+    text: `Owner said: "${fact}"`,
+  };
 }
 
 function memoryBlock(memories: RecalledMemory[]): string {
@@ -117,14 +127,7 @@ export async function buildTwinChat(input: {
       if (!saveFacts) return;
       const facts = extractStatedFacts(userText);
       if (facts.length === 0) return;
-      await rememberTwin(
-        address,
-        facts.map((fact) => ({
-          type: "chat" as const,
-          key: `chat:${createHash("sha256").update(fact.toLowerCase()).digest("hex").slice(0, 32)}`,
-          text: `Owner said: "${fact}"`,
-        })),
-      );
+      await rememberTwin(address, facts.map(chatFactEntry));
     },
   };
 }
