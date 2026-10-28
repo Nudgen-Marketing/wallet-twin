@@ -116,6 +116,58 @@ flowchart LR
 | `/leaderboard` | Published twins ranked by simulated copy return, then win rate and PnL |
 | `/twin/[address]` | Public twin: profile, insights, milestones, stats, public chat, paper-copy button |
 | `/portfolio` | Paper portfolios: value, PnL, holdings, recent copied trades, fees, "leader would have earned" |
+| `/connect` | Agents: MCP server URLs, per-client setup, the tools each permission unlocks, API keys and connected apps |
+| `/oauth/authorize` | Consent screen an AI app sends you to: sign in with your wallet, pick its permissions |
+
+## Use WalletTwin from any AI agent (MCP)
+
+WalletTwin is a remote [Model Context Protocol](https://modelcontextprotocol.io) server (spec 2026-07-28, stateless
+Streamable HTTP, with a fallback for 2025-era clients). Connect Claude, ChatGPT, Cursor, VS Code or your own agent; setup
+steps for each are on `/connect`.
+
+| Endpoint | Auth | What it serves |
+| --- | --- | --- |
+| `/api/mcp` | OAuth 2.1 access token or `wt_key_…` API key | Everything below, limited to the permissions you granted |
+| `/api/mcp/public` | None (rate-limited per IP) | Leaderboard, published twins and their public chat |
+
+```bash
+claude mcp add --transport http wallettwin https://wallet-twin.gcp.nudgen.net/api/mcp
+```
+
+**Tools, by permission** (every tool has input and output schemas plus read-only/destructive hints):
+
+| Permission | Tools |
+| --- | --- |
+| none | `get_leaderboard`, `list_demo_twins`, `get_public_twin`, `ask_public_twin` |
+| any connection | `whoami` |
+| `twin:read` | `get_my_stats`, `recall_my_memories`, `list_my_trades`, `get_my_wrapped`, `get_sync_status`, `get_paper_portfolio` |
+| `twin:chat` | `ask_my_twin` (saves stated facts only with `twin:remember`) |
+| `twin:remember` | `remember_fact` |
+| `twin:sync` | `start_sync` |
+| `twin:publish` | `set_published` (never granted by default) |
+| `copy:trade` | `follow_twin`, `unfollow_twin`, `poll_paper_trades` (simulated) |
+
+It also serves the prompts `roast_my_trading`, `weekly_review` and `should_i_copy`, and the resource template
+`wallettwin://twin/{address}`.
+
+**How auth works** ([`lib/mcp/auth/`](lib/mcp/auth/oauth.ts)):
+
+- An unauthenticated call to `/api/mcp` returns a 401 that points at RFC 9728 protected resource metadata. Clients then
+  discover the RFC 8414 authorization server metadata (this same app).
+- **Clients:** Client ID Metadata Documents, fetched with an SSRF guard (public addresses only, no redirects, 8 KB,
+  3 s), plus legacy Dynamic Client Registration. Self-registered clients are labeled "unverified" on the consent screen.
+- **Codes and tokens:** PKCE S256 only. Codes are single-use, last 60 s, and are bound to the client, redirect URI and
+  resource (RFC 8707). Access tokens last 1 h; refresh tokens last 30 d, rotate on every use, and a replayed one revokes
+  the whole grant.
+- **Storage:** tokens and API keys are opaque, prefixed (`wt_at_`, `wt_rt_`, `wt_key_`) and stored only as SHA-256
+  hashes. Revoke them on `/connect` or through RFC 7009.
+- **Demo wallets** can connect through OAuth, so judges can try it. They keep the web demo's limits: nothing is saved,
+  they can't unpublish, and all grants on a demo wallet share one rate limit.
+- **Privacy rule:** public tools only read the `profile`, `insight` and `milestone` memory namespaces. That is the same
+  structural rule as the public chat.
+
+> Prod note: the SQLite DB resets on every deploy (no persistent volume yet), so connected apps and API keys must be
+> re-created after a deploy. Clients see a 401 and re-run OAuth automatically.
 
 ## Setup
 
@@ -162,6 +214,7 @@ browser extension. It is disabled in production builds.
 | `pnpm dev` / `pnpm build` | Next.js dev server / production build |
 | `pnpm test` | Unit + integration tests (recorded Tatum fixtures, throwaway SQLite DB) |
 | `pnpm test:e2e` | Playwright end-to-end suite (see below) |
+| `E2E_PORT=3300 pnpm test:e2e` | Same suite on another port, with its own database and build dir |
 | `pnpm test:live` | Live checks against Tatum mainnet: gRPC vs GraphQL cross-check, history depth, prices (uses credits) |
 | `pnpm typecheck` / `pnpm lint` | `next typegen` + TypeScript / ESLint |
 | `pnpm analyze <address>` | Run Tatum → parser → prices → stats for any wallet and print the stats |
@@ -171,7 +224,7 @@ browser extension. It is disabled in production builds.
 
 ## End-to-end tests
 
-`pnpm test:e2e` runs 15 Playwright tests in your installed Google Chrome (`channel: "chrome"`,
+`pnpm test:e2e` runs 20 Playwright tests in your installed Google Chrome (`channel: "chrome"`,
 no browser download). It starts its own dev server on port 3100 with an isolated build dir
 (`build/e2e`), a freshly migrated and seeded database (`prisma/e2e.db`,
 [`scripts/e2e-seed.ts`](scripts/e2e-seed.ts)), and the local memory backend, so a run never
@@ -187,6 +240,8 @@ Covered flows:
 - **Leaderboard and public twin:** ranking, and private `[chat]`/`[trade]` memories never appear on the public page.
 - **Paper copy trading:** follow → $1,000 portfolio → poll → stop.
 - **Publishing:** publish → leaderboard → unpublish.
+- **MCP:** the public endpoint, the 401 OAuth challenge, an API key from `/connect` (used, then revoked), and the full
+  OAuth flow (register → consent with a narrowed scope → code + PKCE → token → tool calls).
 - **Phone layouts:** no horizontal overflow at Pixel 7 size.
 
 Every test also fails on uncaught page errors, unexpected console errors, or any 5xx from the

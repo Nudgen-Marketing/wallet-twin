@@ -7,9 +7,12 @@ import { defineConfig, devices } from "@playwright/test";
  * the chain (sign-in sync, following a twin) still call Tatum with your key.
  */
 
-const PORT = 3100;
+// E2E_PORT runs a second suite side by side (e.g. another checkout's server holds 3100);
+// it gets its own database and build dir so the two never share state.
+const PORT = Number(process.env.E2E_PORT ?? 3100);
+const SUFFIX = PORT === 3100 ? "" : `-${PORT}`;
 export const E2E_BASE_URL = `http://localhost:${PORT}`;
-export const E2E_DATABASE_URL = "file:./prisma/e2e.db";
+export const E2E_DATABASE_URL = `file:./prisma/e2e${SUFFIX}.db`;
 export const E2E_DEMO_WALLETS = [
   "0x854b8c1993e4396468f166a628e9926a2b18b398f104d8d3046c67bc32a2c940",
   "0x4999139366a0c303b7cf1e683d24d1d8adb0de38e342fdfdee8788f8d1976c58",
@@ -18,7 +21,7 @@ export const E2E_DEMO_WALLETS = [
 export const E2E_ENV = {
   DATABASE_URL: E2E_DATABASE_URL,
   // Under build/: already ignored by git and ESLint.
-  NEXT_DIST_DIR: "build/e2e",
+  NEXT_DIST_DIR: `build/e2e${SUFFIX}`,
   NEXT_PUBLIC_APP_URL: E2E_BASE_URL,
   DEMO_WALLETS: E2E_DEMO_WALLETS.join(","),
   // Empty values win over .env files: the app falls back to its local memory store.

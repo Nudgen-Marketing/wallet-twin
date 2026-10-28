@@ -44,7 +44,7 @@ async function Consent({ searchParams }: { searchParams: PageProps<"/oauth/autho
   if (!validation.ok) return <Problem message={validation.error} returnTo={validation.returnTo} />;
 
   const session = await getSession();
-  if (!session) return <SignInFirst clientName={validation.request.clientName} />;
+  if (!session) return <SignInFirst request={validation.request} />;
   return <ConsentForm request={validation.request} session={session} sealed={await sealConsent(validation.request)} />;
 }
 
@@ -68,15 +68,16 @@ function Problem({ message, returnTo }: { message: string; returnTo: string | nu
   );
 }
 
-function SignInFirst({ clientName }: { clientName: string }) {
+function SignInFirst({ request }: { request: AuthorizeRequest }) {
   return (
     <>
       <h1 className="mt-3 fringe font-display text-4xl font-bold uppercase tracking-tight">
-        {clientName} wants to use your twin
+        {request.clientSource === "cimd" ? `${hostOf(request.clientId)} wants to use your twin` : "An app wants to use your twin"}
       </h1>
+      <ClientIdentity request={request} />
       <p className="mt-6 text-lg text-ink-soft">
         First prove which wallet you are: connect it and sign in with the button at the top right. Signing is free and
-        sends no transaction. You&apos;ll come back here to choose what {clientName} may do.
+        sends no transaction. You&apos;ll come back here to choose what it may do.
       </p>
       <section className="panel mt-8 p-6" aria-labelledby="demo-heading">
         <h2 id="demo-heading" className="font-display text-xl font-bold uppercase">

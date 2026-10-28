@@ -9,7 +9,7 @@ if (!process.env.DATABASE_URL?.includes("e2e")) {
   throw new Error("prepare-db only runs against the e2e database (DATABASE_URL must contain 'e2e').");
 }
 
-rmSync("prisma/e2e.db", { force: true });
+rmSync(process.env.DATABASE_URL.replace(/^file:/, ""), { force: true });
 execSync("pnpm prisma migrate deploy", { stdio: "ignore" });
 execSync("pnpm exec tsx --conditions=react-server --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/e2e-seed.ts", {
   stdio: "inherit",
