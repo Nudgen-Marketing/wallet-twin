@@ -30,6 +30,13 @@ describe("redirect URIs", () => {
     expect(isAcceptableRedirectUri("cursor://anysphere.cursor-mcp/oauth/callback")).toBe(true);
   });
 
+  test("only reverse-DNS or well-known app schemes", () => {
+    expect(isAcceptableRedirectUri("com.example.agent:/oauth/callback")).toBe(true);
+    expect(isAcceptableRedirectUri("vscode://ms-vscode.mcp/callback")).toBe(true);
+    expect(isAcceptableRedirectUri("ms-msdt:/id PCWDiagnostic")).toBe(false);
+    expect(isAcceptableRedirectUri("search-ms:query=x")).toBe(false);
+  });
+
   test("refuses plain http elsewhere, dangerous schemes and fragments", () => {
     expect(isAcceptableRedirectUri("http://evil.example/callback")).toBe(false);
     expect(isAcceptableRedirectUri("javascript:alert(1)")).toBe(false);
@@ -58,6 +65,13 @@ describe("client ID metadata documents", () => {
     expect(isCimdClientId("http://agent.example/client.json")).toBe(false);
     expect(isCimdClientId("https://user:pw@agent.example/client.json")).toBe(false);
     expect(isCimdClientId("wtc_abc")).toBe(false);
+  });
+
+  test("IP-literal client ids are refused (they would skip the DNS-time SSRF check)", () => {
+    expect(isCimdClientId("https://127.0.0.1/client.json")).toBe(false);
+    expect(isCimdClientId("https://[::1]/client.json")).toBe(false);
+    expect(isCimdClientId("https://169.254.169.254/latest/meta-data")).toBe(false);
+    expect(isCimdClientId("https://10.0.0.5:6379/x")).toBe(false);
   });
 
   test("parses a valid document", () => {

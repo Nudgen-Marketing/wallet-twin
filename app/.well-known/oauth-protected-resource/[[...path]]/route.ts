@@ -23,7 +23,7 @@ export async function GET(request: Request, context: RouteContext<"/.well-known/
       resource_documentation: `${origin}/connect`,
     },
   });
-  return Response.json(metadata, { headers: { ...CORS_HEADERS, "Cache-Control": "public, max-age=3600" } });
+  return Response.json(metadata, { headers: { ...CORS_HEADERS, "Cache-Control": "no-store" } });
 }
 
 export const OPTIONS = preflight;

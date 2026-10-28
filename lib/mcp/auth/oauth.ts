@@ -32,6 +32,8 @@ export class OAuthFlowError extends Error {
 export interface AuthorizeRequest {
   clientId: string;
   clientName: string;
+  /** cimd: identity proven by the HTTPS host serving its metadata. dcr: self-registered, unverified. */
+  clientSource: "cimd" | "dcr";
   clientUri: string | null;
   logoUri: string | null;
   redirectUri: string;
@@ -42,12 +44,14 @@ export interface AuthorizeRequest {
 }
 
 /**
- * Outcome of validating /authorize parameters. Until the client and redirect URI are verified,
- * errors are shown on our page and never redirected (an open redirector otherwise).
+ * Outcome of validating /authorize parameters. Errors are always shown on our page, never
+ * auto-redirected: anyone can register a client, so a registered redirect URI proves little and
+ * an automatic bounce would make this domain an open redirector. Once the redirect URI is
+ * verified, the page offers `returnTo` as a link the user chooses to follow.
  */
 export type AuthorizeValidation =
   | { ok: true; request: AuthorizeRequest }
-  | { ok: false; error: string; redirectTo: string | null };
+  | { ok: false; error: string; returnTo: string | null };
 
 const authorizeParams = z.object({
   response_type: z.string().optional(),
@@ -75,7 +79,7 @@ export async function validateAuthorizeRequest(
   options: { fetcher?: (url: string) => Promise<unknown> } = {},
 ): Promise<AuthorizeValidation> {
   const parsed = authorizeParams.safeParse(params);
-  if (!parsed.success) return { ok: false, error: "This sign-in link is missing its client_id or redirect_uri.", redirectTo: null };
+  if (!parsed.success) return { ok: false, error: "This sign-in link is missing its client_id or redirect_uri.", returnTo: null };
   const query = parsed.data;
 
   let client: OAuthClientInfo;
@@ -83,17 +87,17 @@ export async function validateAuthorizeRequest(
     client = await resolveClient(query.client_id, { fetcher: options.fetcher });
   } catch (error: unknown) {
     const message = error instanceof ClientError ? error.message : "We couldn't identify the app asking for access.";
-    return { ok: false, error: message, redirectTo: null };
+    return { ok: false, error: message, returnTo: null };
   }
   if (!isRedirectAllowed(client.redirectUris, query.redirect_uri)) {
-    return { ok: false, error: `${client.name} asked to send you somewhere it never registered.`, redirectTo: null };
+    return { ok: false, error: `${client.name} asked to send you somewhere it never registered.`, returnTo: null };
   }
 
   // From here on the redirect URI is trusted, so protocol errors go back to the client.
   const fail = (error: string, description: string): AuthorizeValidation => ({
     ok: false,
     error: description,
-    redirectTo: errorRedirect(query.redirect_uri, error, description, query.state, origin),
+    returnTo: errorRedirect(query.redirect_uri, error, description, query.state, origin),
   });
   if (query.response_type !== "code") return fail("unsupported_response_type", "Only response_type=code is supported.");
   if (query.code_challenge_method !== "S256" || !query.code_challenge || !S256_CHALLENGE.test(query.code_challenge)) {
@@ -111,6 +115,7 @@ export async function validateAuthorizeRequest(
     request: {
       clientId: client.id,
       clientName: client.name,
+      clientSource: client.source,
       clientUri: client.clientUri,
       logoUri: client.logoUri,
       redirectUri: query.redirect_uri,
@@ -153,23 +158,16 @@ export async function approveConsent(
   const scopes = request.scopes.filter((scope) => chosenScopes.includes(scope));
   if (scopes.length === 0) return denyConsent(request, origin);
 
-  const existing = await db.oAuthGrant.findFirst({
-    where: { clientId: request.clientId, address: session.address, revokedAt: null },
+  // One live grant per wallet and client; the transaction keeps concurrent approvals from making two.
+  const grant = await db.$transaction(async (tx) => {
+    const existing = await tx.oAuthGrant.findFirst({
+      where: { clientId: request.clientId, address: session.address, revokedAt: null },
+    });
+    const data = { scopes: formatScopes(scopes), clientName: request.clientName, demo: Boolean(session.demo) };
+    return existing
+      ? tx.oAuthGrant.update({ where: { id: existing.id }, data })
+      : tx.oAuthGrant.create({ data: { ...data, clientId: request.clientId, address: session.address } });
   });
-  const grant = existing
-    ? await db.oAuthGrant.update({
-        where: { id: existing.id },
-        data: { scopes: formatScopes(scopes), clientName: request.clientName, demo: Boolean(session.demo) },
-      })
-    : await db.oAuthGrant.create({
-        data: {
-          clientId: request.clientId,
-          clientName: request.clientName,
-          address: session.address,
-          demo: Boolean(session.demo),
-          scopes: formatScopes(scopes),
-        },
-      });
 
   const code = newSecret("code");
   await db.oAuthCode.create({

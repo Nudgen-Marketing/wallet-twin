@@ -32,10 +32,15 @@ const CIMD_TTL_MS = 24 * 60 * 60 * 1000;
 const CIMD_TIMEOUT_MS = 3_000;
 const CIMD_MAX_BYTES = 8 * 1024;
 const MAX_REDIRECT_URIS = 10;
+const UNREACHABLE = "Couldn't load the client's metadata document.";
 
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "[::1]", "localhost"]);
-// Schemes a browser must never be sent to with an authorization code.
-const FORBIDDEN_SCHEMES = new Set(["javascript:", "data:", "file:", "vbscript:", "blob:", "about:"]);
+/**
+ * Native apps' own schemes: reverse-DNS private-use schemes (RFC 8252 §7.1) or a few well-known
+ * MCP clients. Anything else (ms-msdt:, search-ms:, javascript:…) could launch a local handler.
+ */
+const KNOWN_APP_SCHEMES = new Set(["cursor:", "vscode:", "vscode-insiders:", "windsurf:", "claude:", "zed:"]);
+const REVERSE_DNS_SCHEME = /^[a-z][a-z0-9-]*(\.[a-z0-9-]+)+:$/;
 
 /** Addresses a server-side fetch must never reach (SSRF): private, loopback, link-local, CGNAT, multicast. */
 const BLOCKED = new BlockList();
@@ -58,6 +63,9 @@ for (const [network, prefix] of [
   ["::", 128],
   ["::1", 128],
   ["64:ff9b::", 96],
+  ["64:ff9b:1::", 48],
+  ["2001::", 32],
+  ["2002::", 16],
   ["fc00::", 7],
   ["fe80::", 10],
   ["ff00::", 8],
@@ -83,11 +91,9 @@ export function isAcceptableRedirectUri(value: string): boolean {
     return false;
   }
   if (url.hash || url.username || url.password) return false;
-  if (FORBIDDEN_SCHEMES.has(url.protocol)) return false;
   if (url.protocol === "https:") return true;
   if (url.protocol === "http:") return LOOPBACK_HOSTS.has(url.hostname);
-  // Private-use schemes (RFC 8252 §7.1), e.g. cursor://… or com.example.app:/callback.
-  return /^[a-z][a-z0-9+.-]*:$/.test(url.protocol);
+  return KNOWN_APP_SCHEMES.has(url.protocol) || REVERSE_DNS_SCHEME.test(url.protocol);
 }
 
 /**
@@ -117,8 +123,11 @@ export function isRedirectAllowed(registered: readonly string[], requested: stri
 export function isCimdClientId(clientId: string): boolean {
   try {
     const url = new URL(clientId);
+    // An IP literal skips DNS, so the lookup-time SSRF guard would never see it: names only.
+    const isIpLiteral = isIP(url.hostname.replace(/^\[|\]$/g, "")) !== 0;
     return (
       url.protocol === "https:" &&
+      !isIpLiteral &&
       url.pathname !== "/" &&
       !url.hash &&
       !url.username &&
@@ -165,7 +174,7 @@ export function fetchClientMetadata(url: string): Promise<unknown> {
       (response) => {
         if (response.statusCode !== 200) {
           response.resume();
-          return reject(new ClientError(`Client metadata returned HTTP ${response.statusCode ?? "?"}.`));
+          return reject(new ClientError(UNREACHABLE));
         }
         const chunks: Buffer[] = [];
         let size = 0;
@@ -187,8 +196,9 @@ export function fetchClientMetadata(url: string): Promise<unknown> {
         });
       },
     );
-    request.on("timeout", () => request.destroy(new ClientError("Client metadata took too long to load.")));
-    request.on("error", (error) => reject(error instanceof ClientError ? error : new ClientError("Couldn't load the client's metadata.")));
+    // One message for timeouts, refusals and TLS errors, so this can't be used to probe ports.
+    request.on("timeout", () => request.destroy());
+    request.on("error", (error) => reject(error instanceof ClientError ? error : new ClientError(UNREACHABLE)));
     request.end();
   });
 }

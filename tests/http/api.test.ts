@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { describe, expect, test } from "vitest";
-import { isSameOrigin } from "@/lib/http/api";
+import { clientIp, isSameOrigin } from "@/lib/http/api";
 
 // The standalone server sees its bind address (HOSTNAME=0.0.0.0) as the request URL's host.
 const post = (headers: Record<string, string>) =>
@@ -28,5 +28,21 @@ describe("isSameOrigin", () => {
     expect(isSameOrigin(post({ host: "wallet-twin.gcp.nudgen.net", origin: "https://evil.example" }))).toBe(false);
     expect(isSameOrigin(post({ host: "wallet-twin.gcp.nudgen.net" }))).toBe(false);
     expect(isSameOrigin(post({ host: "wallet-twin.gcp.nudgen.net", origin: "not a url" }))).toBe(false);
+  });
+});
+
+describe("clientIp", () => {
+  const request = (headers: Record<string, string>) => new Request("http://localhost/", { headers });
+
+  test("prefers the proxy's X-Real-IP", () => {
+    expect(clientIp(request({ "x-real-ip": "203.0.113.7", "x-forwarded-for": "1.2.3.4, 203.0.113.7" }))).toBe("203.0.113.7");
+  });
+
+  test("ignores the client-controlled left end of X-Forwarded-For", () => {
+    expect(clientIp(request({ "x-forwarded-for": "6.6.6.6, 203.0.113.7" }))).toBe("203.0.113.7");
+  });
+
+  test("falls back to a fixed key without proxy headers", () => {
+    expect(clientIp(request({}))).toBe("local");
   });
 });

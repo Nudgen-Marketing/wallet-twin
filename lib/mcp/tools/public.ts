@@ -98,7 +98,7 @@ export const getPublicTwinTool = defineTool({
   title: "Public twin profile",
   description:
     "A published twin's trading profile, data-backed insights, milestones and aggregate stats. " +
-    `Never includes the owner's private chat facts or individual trades. ${NOTICE}`,
+    `Never includes the owner's private chat facts or trade memories. ${NOTICE}`,
   access: "public",
   input: z.object({ address: addressInput }),
   output: publicTwinSchema,

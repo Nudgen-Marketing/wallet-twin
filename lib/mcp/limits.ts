@@ -19,8 +19,17 @@ const limiters = Object.fromEntries(
   Object.entries(LIMITS).map(([bucket, rule]) => [bucket, createRateLimiter(rule)]),
 ) as Record<keyof typeof LIMITS, RateLimiter>;
 
+/**
+ * Anyone can mint a demo grant, so every grant on a shared demo wallet counts against one
+ * limit for that wallet instead of getting its own.
+ */
+function limitKey(principal: McpPrincipal): string {
+  return principal.demo && principal.address ? `demo:${principal.address}` : principal.id;
+}
+
 /** Records one call; false once the caller is over its overall or per-bucket limit. */
 export function takeCall(principal: McpPrincipal, bucket?: LimitBucket): boolean {
-  if (!limiters.call.take(principal.id)) return false;
-  return bucket ? limiters[bucket].take(principal.id) : true;
+  const key = limitKey(principal);
+  if (!limiters.call.take(key)) return false;
+  return bucket ? limiters[bucket].take(key) : true;
 }

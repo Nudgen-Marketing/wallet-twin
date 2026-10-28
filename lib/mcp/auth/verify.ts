@@ -32,7 +32,8 @@ async function principalForAccessToken(token: string, resource: string, now: Dat
     id: `grant:${grant.id}`,
     address: grant.address,
     demo: grant.demo,
-    scopes: parseScopes(row.scopes),
+    // A re-consent can narrow the grant; live access tokens narrow with it.
+    scopes: parseScopes(row.scopes).filter((scope) => parseScopes(grant.scopes).includes(scope)),
   };
 }
 

@@ -1,12 +1,14 @@
 import { formatAddress } from "@mysten/sui/utils";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { DemoLoginButton } from "@/components/demo/DemoLoginButton";
 import { getSession, type Session } from "@/lib/auth/session";
 import { demoWallets } from "@/lib/demo";
 import { type AuthorizeRequest, sealConsent, validateAuthorizeRequest } from "@/lib/mcp/auth/oauth";
+import { clientIp } from "@/lib/http/api";
+import { createRateLimiter } from "@/lib/http/rate-limit";
+import { pageRequest } from "@/lib/mcp/auth/origin";
 import { publicOrigin } from "@/lib/mcp/auth/urls";
 import { SCOPE_INFO } from "@/lib/mcp/scopes";
 
@@ -14,6 +16,9 @@ export const metadata: Metadata = {
   title: "Connect an AI agent",
   robots: { index: false, follow: false },
 };
+
+// Each visit can fetch a client's metadata document, so unauthenticated visits are bounded per IP.
+const limiter = createRateLimiter({ limit: 20, windowMs: 60_000 });
 
 export default function AuthorizePage(props: PageProps<"/oauth/authorize">) {
   return (
@@ -31,20 +36,19 @@ function firstValues(params: Record<string, string | string[] | undefined>): Rec
 }
 
 async function Consent({ searchParams }: { searchParams: PageProps<"/oauth/authorize">["searchParams"] }) {
-  const [params, requestHeaders] = await Promise.all([searchParams, headers()]);
-  const origin = publicOrigin(new Request(`http://${requestHeaders.get("host") ?? "localhost"}/`, { headers: requestHeaders }));
-  const validation = await validateAuthorizeRequest(firstValues(params), origin);
-  if (!validation.ok) {
-    if (validation.redirectTo) redirect(validation.redirectTo);
-    return <Problem message={validation.error} />;
-  }
+  // The rate limiter reads the clock, so this must render per request, never in a prerender.
+  await connection();
+  const [params, request] = await Promise.all([searchParams, pageRequest()]);
+  if (!limiter.take(clientIp(request))) return <Problem message="Too many connection attempts. Try again in a minute." returnTo={null} />;
+  const validation = await validateAuthorizeRequest(firstValues(params), publicOrigin(request));
+  if (!validation.ok) return <Problem message={validation.error} returnTo={validation.returnTo} />;
 
   const session = await getSession();
   if (!session) return <SignInFirst clientName={validation.request.clientName} />;
   return <ConsentForm request={validation.request} session={session} sealed={await sealConsent(validation.request)} />;
 }
 
-function Problem({ message }: { message: string }) {
+function Problem({ message, returnTo }: { message: string; returnTo: string | null }) {
   return (
     <>
       <h1 className="mt-3 fringe font-display text-4xl font-bold uppercase tracking-tight">Can&apos;t connect this app</h1>
@@ -52,6 +56,14 @@ function Problem({ message }: { message: string }) {
         {message}
       </p>
       <p className="mt-4 text-ink-soft">Go back to your AI app and start connecting WalletTwin again.</p>
+      {returnTo && (
+        <p className="mt-4 text-sm text-ink-soft">
+          {/* A link, never an automatic redirect: see AuthorizeValidation. */}
+          <a href={returnTo} rel="noreferrer" className="link-volt">
+            Return to {hostOf(returnTo)}
+          </a>
+        </p>
+      )}
     </>
   );
 }
@@ -92,12 +104,35 @@ function hostOf(uri: string): string {
   }
 }
 
+/**
+ * Names are self-declared, so the headline is the client's proven domain (CIMD) or an explicit
+ * "unverified" (DCR); the claimed name only appears in quotes.
+ */
+function ClientIdentity({ request }: { request: AuthorizeRequest }) {
+  if (request.clientSource === "cimd") {
+    return (
+      <p className="mt-4 text-ink-soft">
+        <span className="font-mono text-xs uppercase tracking-[0.16em] text-gain">Verified domain</span>{" "}
+        {hostOf(request.clientId)} calls itself &ldquo;{request.clientName}&rdquo;.
+      </p>
+    );
+  }
+  return (
+    <p className="mt-4 border border-signal/60 bg-signal/10 p-3 text-sm text-ink-soft">
+      <span className="font-mono text-xs uppercase tracking-[0.16em] text-signal">Unverified app</span> It registered
+      itself as &ldquo;{request.clientName}&rdquo;. Anyone can pick that name: only allow it if you just started
+      connecting WalletTwin from that app and the address below is where you expect to go back to.
+    </p>
+  );
+}
+
 function ConsentForm({ request, session, sealed }: { request: AuthorizeRequest; session: Session; sealed: string }) {
   return (
     <>
       <h1 className="mt-3 fringe font-display text-4xl font-bold uppercase tracking-tight">
-        Let {request.clientName} use your twin?
+        {request.clientSource === "cimd" ? `Let ${hostOf(request.clientId)} use your twin?` : "Let an unverified app use your twin?"}
       </h1>
+      <ClientIdentity request={request} />
       <dl className="mt-6 grid gap-x-6 gap-y-2 font-mono text-sm sm:grid-cols-[max-content_1fr]">
         <dt className="text-ink-soft">Wallet</dt>
         <dd>

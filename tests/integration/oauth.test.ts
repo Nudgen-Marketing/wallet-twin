@@ -114,19 +114,19 @@ describe("authorization request validation", () => {
       { response_type: "code", client_id: clientId, redirect_uri: "https://evil.example/steal", code_challenge: pkceChallenge(VERIFIER), code_challenge_method: "S256" },
       ORIGIN,
     );
-    expect(validation).toMatchObject({ ok: false, redirectTo: null });
+    expect(validation).toMatchObject({ ok: false, returnTo: null });
   });
 
   test("unknown clients are shown an error, not redirected", async () => {
     const validation = await validateAuthorizeRequest({ client_id: "wtc_unknown", redirect_uri: REDIRECT }, ORIGIN);
-    expect(validation).toMatchObject({ ok: false, redirectTo: null });
+    expect(validation).toMatchObject({ ok: false, returnTo: null });
   });
 
   test("missing PKCE or a foreign resource goes back to the client as an error", async () => {
     const clientId = await registerClient();
     const noPkce = await validateAuthorizeRequest({ response_type: "code", client_id: clientId, redirect_uri: REDIRECT, state: "s" }, ORIGIN);
     expect(noPkce.ok).toBe(false);
-    const target = new URL((noPkce as { redirectTo: string }).redirectTo);
+    const target = new URL((noPkce as { returnTo: string }).returnTo);
     expect(target.searchParams.get("error")).toBe("invalid_request");
     expect(target.searchParams.get("state")).toBe("s");
 
@@ -134,7 +134,7 @@ describe("authorization request validation", () => {
       { response_type: "code", client_id: clientId, redirect_uri: REDIRECT, code_challenge: pkceChallenge(VERIFIER), code_challenge_method: "S256", resource: "https://other.example/mcp" },
       ORIGIN,
     );
-    expect(new URL((foreign as { redirectTo: string }).redirectTo).searchParams.get("error")).toBe("invalid_target");
+    expect(new URL((foreign as { returnTo: string }).returnTo).searchParams.get("error")).toBe("invalid_target");
   });
 
   test("defaults to every scope except publishing", async () => {

@@ -5,7 +5,10 @@ export type McpScope = (typeof MCP_SCOPES)[number];
 
 export const SCOPE_INFO: Record<McpScope, { label: string; description: string }> = {
   "twin:read": { label: "Read your twin", description: "Stats, trades, memories, Wrapped, sync status and paper portfolio." },
-  "twin:chat": { label: "Talk to your twin", description: "Ask your twin questions in its own voice." },
+  "twin:chat": {
+    label: "Talk to your twin",
+    description: "Ask your twin questions in its own voice. Its answers can draw on your private trades and notes.",
+  },
   "twin:remember": { label: "Teach your twin", description: "Save facts you tell it into your private Walrus memory." },
   "twin:sync": { label: "Re-sync your wallet", description: "Pull new on-chain history from Tatum and write new memories." },
   "twin:publish": { label: "Publish or unpublish", description: "Put your twin on the public leaderboard, or take it off." },

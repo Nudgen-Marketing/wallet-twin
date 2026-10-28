@@ -24,7 +24,7 @@ export function GET(request: Request) {
       authorization_response_iss_parameter_supported: true,
       service_documentation: `${origin}/connect`,
     },
-    { headers: { ...CORS_HEADERS, "Cache-Control": "public, max-age=3600" } },
+    { headers: { ...CORS_HEADERS, "Cache-Control": "no-store" } },
   );
 }
 

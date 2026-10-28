@@ -159,6 +159,14 @@ describe("authenticated MCP endpoint", () => {
     expect(await isPublished(DEMO)).toBe(true);
   });
 
+  test("narrowing a grant narrows its live access tokens", async () => {
+    const { token, grantId } = await accessTokenFor(OWNER, { scopes: ["twin:read", "twin:chat"] });
+    await db.oAuthGrant.update({ where: { id: grantId }, data: { scopes: "twin:read" } });
+    const client = await connectMcp(POST, { token });
+    const who = await client.callTool({ name: "whoami", arguments: {} });
+    expect(who.structuredContent).toMatchObject({ scopes: ["twin:read"] });
+  });
+
   test("revoking an OAuth grant cuts its access tokens off", async () => {
     const { token, grantId } = await accessTokenFor(OWNER, { scopes: ["twin:read"] });
     expect((await postMcp(token)).status).toBe(200);
