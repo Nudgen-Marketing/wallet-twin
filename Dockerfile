@@ -85,8 +85,11 @@ COPY --from=builder /app/package.json ./package.json
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 
-# Ensure prisma directory exists and is writable by nextjs user for SQLite
-RUN mkdir -p /app/prisma && chown -R nextjs:nodejs /app
+# SQLite lives in /app/data, outside the image's own files, so it can be a persistent volume
+# (CapRover: App Configs → Persistent Directories → /app/data). A named volume mounted on an
+# empty path copies this directory's nextjs ownership on first use.
+ENV DATABASE_URL="file:/app/data/prod.db"
+RUN mkdir -p /app/prisma /app/data && chown -R nextjs:nodejs /app
 
 USER nextjs
 

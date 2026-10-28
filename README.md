@@ -166,8 +166,8 @@ It also serves the prompts `roast_my_trading`, `weekly_review` and `should_i_cop
 - **Privacy rule:** public tools only read the `profile`, `insight` and `milestone` memory namespaces. That is the same
   structural rule as the public chat.
 
-> Prod note: the SQLite DB resets on every deploy (no persistent volume yet), so connected apps and API keys must be
-> re-created after a deploy. Clients see a 401 and re-run OAuth automatically.
+Connected apps and API keys live in the app database, so they survive deploys once `/app/data` is a persistent
+directory (see [Deploy](#deploy)).
 
 ## Setup
 
@@ -269,6 +269,28 @@ app. The sync and follow flows call Tatum with your key. The HTML report is writ
 6. **1:40 Paper-copy.** Click **Paper-copy this twin · $1,000 simulated** → `/portfolio`.
    New leader swaps are pulled through Tatum and mirrored proportionally. The 0.5% fee split
    shows **"Leader would have earned $X"**: the copy-volume business model, entirely simulated.
+
+## Deploy
+
+A push to `main` runs [`.github/workflows/docker-app.yml`](.github/workflows/docker-app.yml): lint, typecheck,
+tests and a build, then an arm64 image pushed to ghcr.io and `caprover deploy`.
+
+The production SQLite database is `/app/data/prod.db` ([`docker-entrypoint.sh`](docker-entrypoint.sh) runs
+`prisma migrate deploy` on it at startup). Keep it across deploys with a CapRover persistent directory, a one-time
+setup:
+
+1. CapRover → Apps → `wallet-twin` → **App Configs** → **Persistent Directories** → **Add Persistent Directory**.
+   Set the path in the app to `/app/data` and give it a **label** (e.g. `wallet-twin-data`), not a host path. A
+   labelled volume starts with the image's `nextjs` ownership. A host path is owned by root and the app (uid 1001)
+   can't write it.
+2. In **Environment Variables**, leave `DATABASE_URL` unset (the image defaults to `file:/app/data/prod.db`), or set
+   it to exactly that value.
+3. **Save & Update**. The logs show `Creating SQLite database: /app/data/prod.db` on the first start and
+   `Using existing SQLite database` after every later deploy.
+
+If the directory isn't writable, the container still starts on an ephemeral `/app/prisma/prod.db` and logs
+`WARNING: … Data will be LOST on the next deploy`. The demo twins are seeded only when missing from the leaderboard, so
+with a persistent database a redeploy no longer re-syncs them or writes duplicate memories to Walrus.
 
 ## Design notes and limits
 
