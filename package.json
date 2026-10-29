@@ -30,7 +30,7 @@
     "@mysten/dapp-kit-react": "2.1.41",
     "@mysten/seal": "1.5.1",
     "@mysten/sui": "2.37.0",
-    "@prisma/adapter-better-sqlite3": "7.10.1",
+    "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
     "@protobuf-ts/grpc-transport": "2.11.1",
     "ai": "6.0.315",

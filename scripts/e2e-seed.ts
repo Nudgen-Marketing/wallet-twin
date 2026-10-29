@@ -1,6 +1,6 @@
 /**
  * Deterministic data for the Playwright e2e suite (run by e2e/global-setup.ts against
- * prisma/e2e.db with the local memory backend). Never run against your dev database.
+ * the wallet_twin_e2e Postgres database with the local memory backend). Never run against your dev database.
  */
 import { db } from "@/lib/db";
 import { rememberTwin } from "@/lib/memory";

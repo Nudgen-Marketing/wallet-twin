@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { parseEnv } from "@/lib/env";
 
 const BASE = {
-  DATABASE_URL: "file:./prisma/dev.db",
+  DATABASE_URL: "postgresql://localhost:5432/wallet_twin",
   SESSION_SECRET: "x".repeat(32),
 };
 

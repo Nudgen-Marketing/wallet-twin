@@ -1,8 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * End-to-end tests against an isolated dev server: its own build dir, its own SQLite
- * database (seeded deterministically) and the local memory backend, so runs never
+ * End-to-end tests against an isolated dev server: its own build dir, its own Postgres
+ * database (wiped and seeded deterministically) and the local memory backend, so runs never
  * touch your dev database or write test twins to Walrus. Flows that inherently need
  * the chain (sign-in sync, following a twin) still call Tatum with your key.
  */
@@ -12,7 +12,8 @@ import { defineConfig, devices } from "@playwright/test";
 const PORT = Number(process.env.E2E_PORT ?? 3100);
 const SUFFIX = PORT === 3100 ? "" : `-${PORT}`;
 export const E2E_BASE_URL = `http://localhost:${PORT}`;
-export const E2E_DATABASE_URL = `file:./prisma/e2e${SUFFIX}.db`;
+export const E2E_DATABASE_URL =
+  process.env.E2E_DATABASE_URL ?? `postgresql://${process.env.USER}@localhost:5432/wallet_twin_e2e${SUFFIX.replace("-", "_")}`;
 export const E2E_DEMO_WALLETS = [
   "0x854b8c1993e4396468f166a628e9926a2b18b398f104d8d3046c67bc32a2c940",
   "0x4999139366a0c303b7cf1e683d24d1d8adb0de38e342fdfdee8788f8d1976c58",
@@ -31,7 +32,7 @@ export const E2E_ENV = {
 
 export default defineConfig({
   testDir: "./e2e",
-  // One dev server and one SQLite file: run serially for deterministic state.
+  // One dev server and one database: run serially for deterministic state.
   workers: 1,
   fullyParallel: false,
   timeout: 90_000,

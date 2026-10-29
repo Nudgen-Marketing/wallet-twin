@@ -54,7 +54,7 @@ and individual `[trade]`s are never even read on a public route
 | `[profile]` + `[insight]` trading style and data-backed habits, written by Claude from computed features | Regenerated when new activity arrives; the newest is read with `sort: "recent"` | [`lib/twin/narrative.ts`](lib/twin/narrative.ts) |
 | `[chat]` facts you tell your twin ("I'm saving for a house") | During chat, via MemWal's `withMemWal` middleware (`analyze()`), scoped to `twin:<addr>:chat` | [`lib/twin/chat.ts`](lib/twin/chat.ts) |
 
-**Idempotent re-sync:** every write goes through a `(address, key)` ledger in SQLite
+**Idempotent re-sync:** every write goes through a `(address, key)` ledger in Postgres
 ([`prisma/schema.prisma`](prisma/schema.prisma) `MemoryWrite`), so a trade digest is never
 stored twice. Re-running a sync with nothing new writes nothing.
 
@@ -62,8 +62,8 @@ stored twice. Re-running a sync with nothing new writes nothing.
 transaction. We submit bulk jobs of 20 and poll their status; `/sync` shows how many are
 confirmed.
 
-> **Local stand-in:** if `MEMWAL_PRIVATE_KEY` / `MEMWAL_ACCOUNT_ID` are missing, a local SQLite
-> store is used so the app still runs in development. The UI labels this clearly
+> **Local stand-in:** if `MEMWAL_PRIVATE_KEY` / `MEMWAL_ACCOUNT_ID` are missing, a local database
+> table is used so the app still runs in development. The UI labels this clearly
 > ("Memory · local stand-in"). Production and the hackathon demo use Walrus.
 
 ## Architecture
@@ -82,7 +82,7 @@ flowchart LR
     SYNC --> PARSE[Trade parser + FIFO stats<br/>lib/trades/*]
     SYNC --> LLM[Claude via Vercel AI SDK<br/>profile · insights · Wrapped line]
     CHAT --> LLM
-    PARSE --> DB[(SQLite / Prisma<br/>activity, price cache, ledger,<br/>follows, leaderboard)]
+    PARSE --> DB[(Postgres / Prisma<br/>activity, price cache, ledger,<br/>follows, leaderboard)]
     COPY --> DB
   end
 
@@ -166,12 +166,18 @@ It also serves the prompts `roast_my_trading`, `weekly_review` and `should_i_cop
 - **Privacy rule:** public tools only read the `profile`, `insight` and `milestone` memory namespaces. That is the same
   structural rule as the public chat.
 
-Connected apps and API keys live in the app database, so they survive deploys once `/app/data` is a persistent
-directory (see [Deploy](#deploy)).
+Connected apps and API keys live in the app's Postgres database, so they survive deploys (see [Deploy](#deploy)).
 
 ## Setup
 
-Requirements: Node 24+, pnpm (`corepack enable`).
+Requirements: Node 24+, pnpm (`corepack enable`), and Postgres 15+ running locally (e.g. `brew install
+postgresql@17 && brew services start postgresql@17`). Create the dev, test and e2e databases once:
+
+```bash
+createdb wallet_twin && createdb wallet_twin_test && createdb wallet_twin_e2e
+```
+
+Then set `DATABASE_URL="postgresql://<you>@localhost:5432/wallet_twin"` in `.env.local`.
 
 ```bash
 pnpm install
@@ -212,9 +218,9 @@ browser extension. It is disabled in production builds.
 | Command | What it does |
 | --- | --- |
 | `pnpm dev` / `pnpm build` | Next.js dev server / production build |
-| `pnpm test` | Unit + integration tests (recorded Tatum fixtures, throwaway SQLite DB) |
+| `pnpm test` | Unit + integration tests (recorded Tatum fixtures, wipes and migrates `wallet_twin_test`; override with `TEST_DATABASE_URL`) |
 | `pnpm test:e2e` | Playwright end-to-end suite (see below) |
-| `E2E_PORT=3300 pnpm test:e2e` | Same suite on another port, with its own database and build dir |
+| `E2E_PORT=3300 pnpm test:e2e` | Same suite on another port, with its own build dir and database (`createdb wallet_twin_e2e_3300` first) |
 | `pnpm test:live` | Live checks against Tatum mainnet: gRPC vs GraphQL cross-check, history depth, prices (uses credits) |
 | `pnpm typecheck` / `pnpm lint` | `next typegen` + TypeScript / ESLint |
 | `pnpm analyze <address>` | Run Tatum → parser → prices → stats for any wallet and print the stats |
@@ -226,7 +232,7 @@ browser extension. It is disabled in production builds.
 
 `pnpm test:e2e` runs 20 Playwright tests in your installed Google Chrome (`channel: "chrome"`,
 no browser download). It starts its own dev server on port 3100 with an isolated build dir
-(`build/e2e`), a freshly migrated and seeded database (`prisma/e2e.db`,
+(`build/e2e`), a wiped, migrated and seeded Postgres database (`wallet_twin_e2e`, override with `E2E_DATABASE_URL`;
 [`scripts/e2e-seed.ts`](scripts/e2e-seed.ts)), and the local memory backend, so a run never
 touches your dev data or writes test twins to Walrus.
 
@@ -275,22 +281,20 @@ app. The sync and follow flows call Tatum with your key. The HTML report is writ
 A push to `main` runs [`.github/workflows/docker-app.yml`](.github/workflows/docker-app.yml): lint, typecheck,
 tests and a build, then an arm64 image pushed to ghcr.io and `caprover deploy`.
 
-The production SQLite database is `/app/data/prod.db` ([`docker-entrypoint.sh`](docker-entrypoint.sh) runs
-`prisma migrate deploy` on it at startup). Keep it across deploys with a CapRover persistent directory, a one-time
-setup:
+All app data (users, synced activity, the memory ledger, published twins and the leaderboard, paper portfolios,
+connected apps and API keys) lives in Postgres, so it survives every deploy.
+[`docker-entrypoint.sh`](docker-entrypoint.sh) refuses to start without a `postgresql://` `DATABASE_URL` and runs
+`prisma migrate deploy` at startup, retrying for about a minute while the database comes up. One-time setup on CapRover:
 
-1. CapRover → Apps → `wallet-twin` → **App Configs** → **Persistent Directories** → **Add Persistent Directory**.
-   Set the path in the app to `/app/data` and give it a **label** (e.g. `wallet-twin-data`), not a host path. A
-   labelled volume starts with the image's `nextjs` ownership. A host path is owned by root and the app (uid 1001)
-   can't write it.
-2. In **Environment Variables**, leave `DATABASE_URL` unset (the image defaults to `file:/app/data/prod.db`), or set
-   it to exactly that value.
-3. **Save & Update**. The logs show `Creating SQLite database: /app/data/prod.db` on the first start and
-   `Using existing SQLite database` after every later deploy.
+1. CapRover → **Apps** → **One-Click Apps/Databases** → **PostgreSQL**. Name it `wallet-twin-db`, pick a strong
+   password, set the default database to `wallet_twin`, and deploy. Its data sits on a CapRover persistent volume.
+2. Apps → `wallet-twin` → **App Configs** → **Environment Variables**: set
+   `DATABASE_URL=postgresql://postgres:<password>@srv-captain--wallet-twin-db:5432/wallet_twin`
+   (CapRover apps reach each other at `srv-captain--<app name>`; keep the database off the public internet).
+3. **Save & Update**. The logs show `Applying database migrations...` and the init migration on the first start; the
+   demo twins are then seeded once (~3 min) and kept across later deploys.
 
-If the directory isn't writable, the container still starts on an ephemeral `/app/prisma/prod.db` and logs
-`WARNING: … Data will be LOST on the next deploy`. The demo twins are seeded only when missing from the leaderboard, so
-with a persistent database a redeploy no longer re-syncs them or writes duplicate memories to Walrus.
+The old SQLite `/app/data` persistent directory is no longer used and can be removed.
 
 ## Design notes and limits
 
@@ -305,7 +309,7 @@ with a persistent database a redeploy no longer re-syncs them or writes duplicat
   trades in dollar terms can still have a positive proportional copy return, and vice versa.
   SUI and stablecoins map to paper cash: the follower takes no SUI price exposure.
 - **Walrus Memory has no update or delete in the SDK.** "Regenerated" profiles are new entries,
-  and we read the newest. Unpublishing gates access in SQLite; memories stay private in the
+  and we read the newest. Unpublishing gates access in the app database; memories stay private in the
   operator's account.
 - **Demo sessions** are shared: chat works but saves nothing, and demo twins can't be
   unpublished.
@@ -315,5 +319,5 @@ with a persistent database a redeploy no longer re-syncs them or writes duplicat
 
 Next.js 16 (App Router, Cache Components) · React 19 · Tailwind v4 · `@mysten/dapp-kit-react` 2 ·
 `@mysten/sui` 2 · Tatum Sui gateway (gRPC + GraphQL) + Data API ·
-`@mysten-incubation/memwal` · Vercel AI SDK 6 + Anthropic Claude · Prisma 7 + SQLite ·
+`@mysten-incubation/memwal` · Vercel AI SDK 6 + Anthropic Claude · Prisma 7 + Postgres ·
 `next/og` · Vitest.

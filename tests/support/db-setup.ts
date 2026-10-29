@@ -1,13 +1,8 @@
-import { execSync } from "node:child_process";
-import { rmSync } from "node:fs";
+import { resetDatabase } from "./reset-db";
 
-/** Fresh SQLite database for integration tests, migrated with the real migrations. */
-export const TEST_DATABASE_URL = "file:./prisma/test.db";
-
+/** Empties the integration-test database (set in vitest.config.mts) and migrates it with the real migrations. */
 export default function setup(): void {
-  rmSync("prisma/test.db", { force: true });
-  execSync("pnpm prisma migrate deploy", {
-    env: { ...process.env, DATABASE_URL: TEST_DATABASE_URL },
-    stdio: "ignore",
-  });
+  const url = process.env.TEST_DATABASE_URL;
+  if (!url) throw new Error("TEST_DATABASE_URL is not set; vitest.config.mts sets a local default.");
+  resetDatabase(url);
 }

@@ -1,6 +1,7 @@
 allowBuilds:
   '@prisma/engines': true
-  better-sqlite3: true
+  # Pulled in by the prisma CLI; the app talks to Postgres, so its native build is never needed.
+  better-sqlite3: false
   esbuild: true
   prisma: true
   protobufjs: false

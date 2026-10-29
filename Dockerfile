@@ -9,13 +9,6 @@ RUN corepack enable
 
 # Stage 2: Dependencies
 FROM base AS deps
-# Install build tools for native compilation (e.g. better-sqlite3)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 \
-    make \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
-
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY prisma ./prisma/
 COPY prisma.config.ts ./
@@ -41,7 +34,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
 # Dummy env vars to satisfy lib/env.ts schema validation during build-time page rendering
-ENV DATABASE_URL="file:./prisma/dev.db"
+# Pages that read the database opt out of prerendering, so the build never connects to it.
+ENV DATABASE_URL="postgresql://build:build@localhost:5432/build"
 ENV SESSION_SECRET="dummy-build-secret-at-least-32-chars-long"
 
 RUN pnpm build
@@ -85,11 +79,8 @@ COPY --from=builder /app/package.json ./package.json
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 
-# SQLite lives in /app/data, outside the image's own files, so it can be a persistent volume
-# (CapRover: App Configs → Persistent Directories → /app/data). A named volume mounted on an
-# empty path copies this directory's nextjs ownership on first use.
-ENV DATABASE_URL="file:/app/data/prod.db"
-RUN mkdir -p /app/prisma /app/data && chown -R nextjs:nodejs /app
+# The database is Postgres: set DATABASE_URL (postgresql://…) in the app's environment.
+RUN chown -R nextjs:nodejs /app
 
 USER nextjs
 
