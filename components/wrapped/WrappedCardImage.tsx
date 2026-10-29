@@ -1,49 +1,10 @@
 import { formatAddress } from "@mysten/sui/utils";
-import type { WrappedCard } from "@/lib/wrapped/data";
+import { CARD_SIZE, COLOR, DISPLAY, MONO, Stat } from "@/components/og/primitives";
 import { formatDate, formatDuration, formatPercent, formatUsd } from "@/lib/twin/format";
+import type { WrappedCard } from "@/lib/wrapped/data";
 
-/**
- * The 1200×630 Wrapped card, rendered by next/og (Satori: flexbox only, inline styles).
- * Colours are hex mirrors of the CSS tokens in app/globals.css (Satori can't read oklch).
- */
-const COLOR = {
-  paper: "#060911",
-  paperDeep: "#0E131D",
-  ink: "#F1EFE2",
-  inkSoft: "#9FACBA",
-  rule: "#2D3645",
-  signal: "#FAE91D",
-  cyan: "#4AEBEB",
-  gain: "#54F08D",
-  loss: "#FF4260",
-} as const;
-
-const DISPLAY = "Chakra Petch";
-const MONO = "JetBrains Mono";
-
-export const WRAPPED_SIZE = { width: 1200, height: 630 } as const;
-
-/** Signs are set in the mono face so +/− line up across stats. */
-function splitSign(value: string): { sign: string; rest: string } {
-  const match = /^([+−-])(.*)$/.exec(value);
-  return match ? { sign: match[1], rest: match[2] } : { sign: "", rest: value };
-}
-
-function Stat({ label, value, color = COLOR.ink }: { label: string; value: string; color?: string }) {
-  const { sign, rest } = splitSign(value);
-  return (
-    <div style={{ display: "flex", flexDirection: "column", flex: 1, borderTop: `2px solid ${COLOR.rule}`, paddingTop: 14, marginRight: 28, position: "relative" }}>
-      <div style={{ display: "flex", position: "absolute", top: -2, left: 0, width: 36, height: 2, backgroundColor: COLOR.signal }} />
-      <div style={{ display: "flex", fontFamily: MONO, fontSize: 17, letterSpacing: 3, textTransform: "uppercase", color: COLOR.inkSoft }}>
-        {label}
-      </div>
-      <div style={{ display: "flex", alignItems: "center", fontFamily: DISPLAY, fontWeight: 700, fontSize: 62, lineHeight: 1.05, color, marginTop: 6 }}>
-        {sign && <span style={{ fontFamily: MONO, fontWeight: 500, fontSize: 52, marginRight: 4 }}>{sign}</span>}
-        {rest}
-      </div>
-    </div>
-  );
-}
+/** The 1200×630 Wrapped card, rendered by next/og. */
+export const WRAPPED_SIZE = CARD_SIZE;
 
 export function WrappedCardImage({ card }: { card: WrappedCard }) {
   const pnlColor = card.realizedPnlUsd === null ? COLOR.ink : card.realizedPnlUsd >= 0 ? COLOR.gain : COLOR.loss;

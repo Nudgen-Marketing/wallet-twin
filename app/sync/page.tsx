@@ -1,7 +1,15 @@
 import { formatAddress } from "@mysten/sui/utils";
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { SyncPanel } from "@/components/sync/SyncPanel";
 import { getSession } from "@/lib/auth/session";
+import { NOINDEX } from "@/lib/seo/site";
+
+export const metadata: Metadata = {
+  title: "Sync your wallet",
+  description: "Build or refresh your WalletTwin from your Sui wallet's on-chain history.",
+  robots: NOINDEX,
+};
 
 export default function SyncPage() {
   return (

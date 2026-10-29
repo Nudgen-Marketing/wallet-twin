@@ -13,11 +13,14 @@ import { pageOrigin } from "@/lib/mcp/auth/origin";
 import { MCP_PATH, PUBLIC_MCP_PATH } from "@/lib/mcp/auth/urls";
 import { MCP_SCOPES, SCOPE_INFO } from "@/lib/mcp/scopes";
 import { ALL_TOOLS } from "@/lib/mcp/server";
+import { pageMetadata } from "@/lib/seo/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Agents · MCP",
   description: "Connect your WalletTwin to Claude, ChatGPT, Cursor or any MCP-compatible AI agent.",
-};
+  path: "/connect",
+  shareTitle: "Connect WalletTwin to your AI agent (MCP)",
+});
 
 const ACCESS_GROUPS: { access: ToolAccess; label: string; description: string }[] = [
   { access: "public", label: "Anyone", description: "No sign-in. Published twins and the leaderboard." },

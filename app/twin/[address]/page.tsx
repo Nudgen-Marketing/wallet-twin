@@ -1,4 +1,5 @@
 import { formatAddress } from "@mysten/sui/utils";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -9,6 +10,8 @@ import { TwinChat } from "@/components/twin/TwinChat";
 import { parseSuiAddress } from "@/lib/auth/message";
 import { getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
+import { BASE_OPEN_GRAPH, NOINDEX } from "@/lib/seo/site";
+import { describeTwin, loadTwinSeo, twinTitle } from "@/lib/seo/twin";
 import { loadPublicTwin } from "@/lib/twin/public";
 
 const SUGGESTIONS = [
@@ -16,6 +19,24 @@ const SUGGESTIONS = [
   "What's your best trade ever?",
   "What's your biggest weakness as a trader?",
 ];
+
+export async function generateMetadata(props: PageProps<"/twin/[address]">): Promise<Metadata> {
+  const address = parseSuiAddress((await props.params).address);
+  const twin = address ? await loadTwinSeo(address) : null;
+  if (!address || !twin) return { title: "Twin not found", robots: NOINDEX };
+
+  const title = twinTitle(address);
+  const description = describeTwin(twin);
+  const path = `/twin/${address}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    // The preview image comes from the colocated opengraph-image.tsx.
+    openGraph: { ...BASE_OPEN_GRAPH, type: "profile", title: `${title} · WalletTwin`, description, url: path },
+    twitter: { card: "summary_large_image", title: `${title} · WalletTwin`, description },
+  };
+}
 
 export default function PublicTwinPage(props: PageProps<"/twin/[address]">) {
   return (

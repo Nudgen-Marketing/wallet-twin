@@ -41,3 +41,13 @@ export function loadFont(family: string, weight: OgFont["weight"], style: OgFont
   }
   return cache.get(key)!;
 }
+
+/** The display and mono faces every card uses. Missing fonts fall back to next/og's default. */
+export async function loadCardFonts(): Promise<OgFont[]> {
+  const fonts = await Promise.all([
+    loadFont("Chakra Petch", 700),
+    loadFont("Chakra Petch", 400),
+    loadFont("JetBrains Mono", 500),
+  ]);
+  return fonts.filter((font): font is OgFont => font !== null);
+}

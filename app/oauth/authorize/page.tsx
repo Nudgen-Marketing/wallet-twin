@@ -11,10 +11,11 @@ import { createRateLimiter } from "@/lib/http/rate-limit";
 import { pageRequest } from "@/lib/mcp/auth/origin";
 import { publicOrigin } from "@/lib/mcp/auth/urls";
 import { SCOPE_INFO } from "@/lib/mcp/scopes";
+import { NOINDEX } from "@/lib/seo/site";
 
 export const metadata: Metadata = {
   title: "Connect an AI agent",
-  robots: { index: false, follow: false },
+  robots: NOINDEX,
 };
 
 // Each visit can fetch a client's metadata document, so unauthenticated visits are bounded per IP.

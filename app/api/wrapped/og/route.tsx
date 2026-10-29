@@ -4,7 +4,7 @@ import { WRAPPED_SIZE, WrappedCardImage } from "@/components/wrapped/WrappedCard
 import { parseSuiAddress } from "@/lib/auth/message";
 import { fail } from "@/lib/http/api";
 import { buildWrappedCard } from "@/lib/wrapped/data";
-import { loadFont, type OgFont } from "@/lib/wrapped/fonts";
+import { loadCardFonts } from "@/lib/wrapped/fonts";
 import { isValidWrappedToken } from "@/lib/wrapped/share";
 
 /** PNG Wrapped card. Needs the owner-issued share token, not a session, so X can fetch it. */
@@ -14,16 +14,11 @@ export async function GET(request: NextRequest) {
     return fail("Not found", 404);
   }
 
-  const [card, ...fonts] = await Promise.all([
-    buildWrappedCard(address),
-    loadFont("Chakra Petch", 700),
-    loadFont("Chakra Petch", 400),
-    loadFont("JetBrains Mono", 500),
-  ]);
+  const [card, fonts] = await Promise.all([buildWrappedCard(address), loadCardFonts()]);
 
   return new ImageResponse(<WrappedCardImage card={card} />, {
     ...WRAPPED_SIZE,
-    fonts: fonts.filter((font): font is OgFont => font !== null),
+    fonts,
     headers: { "Cache-Control": "public, max-age=300, s-maxage=300" },
   });
 }

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -5,8 +6,15 @@ import { DemoTwins } from "@/components/demo/DemoTwins";
 import { FloodBand } from "@/components/hero/FloodBand";
 import { TwinScope } from "@/components/hero/TwinScope";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
+import { BASE_OPEN_GRAPH, SITE } from "@/lib/seo/site";
 import { getLeaderboard } from "@/lib/twin/publish";
 import { stagger } from "@/lib/ui/stagger";
+
+// The title is the layout's default; the preview image is the colocated opengraph-image.tsx.
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  openGraph: { ...BASE_OPEN_GRAPH, title: SITE.title, description: SITE.description, url: "/" },
+};
 
 const STEPS = [
   {

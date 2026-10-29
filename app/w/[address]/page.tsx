@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { parseSuiAddress } from "@/lib/auth/message";
 import { env } from "@/lib/env";
+import { BASE_OPEN_GRAPH, NOINDEX } from "@/lib/seo/site";
 import { isValidWrappedToken, wrappedImagePath } from "@/lib/wrapped/share";
 
 /** Public landing page for a shared Wrapped card (only reachable with the owner's link). */
@@ -20,12 +21,17 @@ async function resolve(props: Props): Promise<{ address: string; imageUrl: strin
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const shared = await resolve(props);
-  if (!shared) return { title: "WalletTwin" };
+  // Share links carry a secret token: previews yes, search results no.
+  if (!shared) return { robots: NOINDEX };
+  const title = "Wallet Wrapped";
+  const description = "A Sui wallet's year on-chain, remembered by its AI twin.";
+  const image = { url: shared.imageUrl, width: 1200, height: 630, alt: "Wallet Wrapped card with trading stats" };
   return {
-    title: "Wallet Wrapped · WalletTwin",
-    description: "A Sui wallet's year on-chain, remembered by its AI twin.",
-    openGraph: { images: [{ url: shared.imageUrl, width: 1200, height: 630 }] },
-    twitter: { card: "summary_large_image", images: [shared.imageUrl] },
+    title,
+    description,
+    robots: NOINDEX,
+    openGraph: { ...BASE_OPEN_GRAPH, title, description, images: [image] },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
   };
 }
 

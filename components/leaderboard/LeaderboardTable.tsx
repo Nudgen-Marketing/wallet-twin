@@ -1,17 +1,12 @@
 import { formatAddress } from "@mysten/sui/utils";
 import Link from "next/link";
 import type { LeaderboardRow } from "@/lib/twin/publish";
-import { formatPercent, formatUsd } from "@/lib/twin/format";
+import { formatPercent, formatSignedPercent, formatUsd } from "@/lib/twin/format";
 
 interface LeaderboardTableProps {
   rows: LeaderboardRow[];
   /** Compact mode for the landing page. */
   compact?: boolean;
-}
-
-function signedPercent(value: number | null): string {
-  if (value === null) return "—";
-  return `${value > 0 ? "+" : value < 0 ? "−" : ""}${Math.abs(value).toFixed(1)}%`;
 }
 
 function tone(value: number | null): string {
@@ -56,7 +51,7 @@ export function LeaderboardTable({ rows, compact = false }: LeaderboardTableProp
                 <span className="mt-1 block truncate text-ink-soft group-hover:text-ink">{row.headline}</span>
               )}
             </span>
-            <Metric label="Copy return" value={signedPercent(row.copyReturnPct)} className={tone(row.copyReturnPct)} />
+            <Metric label="Copy return" value={formatSignedPercent(row.copyReturnPct)} className={tone(row.copyReturnPct)} />
             <Metric label="Win rate" value={formatPercent(row.winRate)} />
             <Metric
               label="Realized PnL"

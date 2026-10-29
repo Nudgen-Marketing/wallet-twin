@@ -34,6 +34,12 @@ export function formatPercent(ratio: number | null): string {
   return ratio === null ? "—" : `${Math.round(ratio * 100)}%`;
 }
 
+/** A percentage that is already ×100 (e.g. 12.5 → "+12.5%"), with a real minus sign. */
+export function formatSignedPercent(value: number | null): string {
+  if (value === null) return "—";
+  return `${value > 0 ? "+" : value < 0 ? "−" : ""}${Math.abs(value).toFixed(1)}%`;
+}
+
 export function shortType(coinType: string): string {
   return coinType.split("::").at(-1) ?? coinType;
 }

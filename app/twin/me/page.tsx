@@ -1,4 +1,5 @@
 import { formatAddress } from "@mysten/sui/utils";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { MemoryBadge } from "@/components/sync/MemoryBadge";
@@ -8,6 +9,7 @@ import { TwinChat } from "@/components/twin/TwinChat";
 import { getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { memoryBackendName } from "@/lib/memory";
+import { NOINDEX } from "@/lib/seo/site";
 import { loadTwinSnapshot } from "@/lib/twin/data";
 import { isPublished } from "@/lib/twin/publish";
 
@@ -17,6 +19,12 @@ const SUGGESTIONS = [
   "When am I at my best?",
   "Describe my trading style in one sentence.",
 ];
+
+export const metadata: Metadata = {
+  title: "Your twin",
+  description: "Chat with your own WalletTwin, see your stats and choose whether to publish it.",
+  robots: NOINDEX,
+};
 
 export default function MyTwinPage() {
   return (

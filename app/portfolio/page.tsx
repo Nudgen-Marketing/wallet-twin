@@ -1,11 +1,19 @@
 import { formatAddress } from "@mysten/sui/utils";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { PortfolioPoller } from "@/components/copy/PortfolioPoller";
 import { getSession } from "@/lib/auth/session";
 import { FEE_RATE, LEADER_FEE_SHARE } from "@/lib/copy/engine";
 import { type FollowView, loadPortfolio } from "@/lib/copy/portfolio";
+import { NOINDEX } from "@/lib/seo/site";
 import { formatDate, formatDateTime, formatUsd } from "@/lib/twin/format";
+
+export const metadata: Metadata = {
+  title: "Paper portfolio",
+  description: "Your simulated copy-trading portfolio. No real funds.",
+  robots: NOINDEX,
+};
 
 export default function PortfolioPage() {
   return (

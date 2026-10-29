@@ -1,11 +1,19 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { WrappedActions } from "@/components/wrapped/WrappedActions";
 import { getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
+import { NOINDEX } from "@/lib/seo/site";
 import { buildWrappedCard, wrappedShareText } from "@/lib/wrapped/data";
 import { wrappedImagePath, wrappedSharePath } from "@/lib/wrapped/share";
+
+export const metadata: Metadata = {
+  title: "Wallet Wrapped",
+  description: "Your Sui wallet's year on-chain as a shareable card.",
+  robots: NOINDEX,
+};
 
 export default function WrappedPage() {
   return (
