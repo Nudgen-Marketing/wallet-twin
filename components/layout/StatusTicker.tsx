@@ -55,8 +55,8 @@ function useSpotPrices(): SpotPrice[] {
 function PriceReadout({ price }: { price: SpotPrice }) {
   const { change24h } = price;
   return (
-    <span className="flex shrink-0 items-center gap-3 px-6 font-mono text-[0.65rem] uppercase tracking-[0.25em] text-ink-soft">
-      <span className="size-1 bg-signal" />
+    <span className="flex shrink-0 items-center gap-3 px-6 font-mono text-[0.8rem] uppercase tracking-[0.18em] text-ink-soft sm:text-sm">
+      <span className="size-1.5 bg-signal" />
       <span className="text-ink">{price.symbol}</span>
       <span className="tabular-nums">{formatUsd(price.usd)}</span>
       {change24h !== null && (
@@ -74,7 +74,7 @@ export function StatusTicker() {
   const summary = prices.map((p) => `${p.symbol} ${formatUsd(p.usd)}`).join(", ");
 
   return (
-    <div className="overflow-hidden border-t border-rule/60 bg-paper-deep/70 py-1">
+    <div className="overflow-hidden border-t border-rule/60 bg-paper-deep/70 py-1.5">
       <p className="sr-only">Spot prices: {summary}</p>
       <div aria-hidden className="ticker-track">
         {items.map((price, index) => (
