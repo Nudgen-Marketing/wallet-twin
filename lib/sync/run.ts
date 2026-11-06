@@ -120,12 +120,12 @@ export async function runSync(runId: string, address: string): Promise<void> {
         address,
         lastCheckpoint: newest?.checkpoint ?? null,
         lastDigest: newest?.digest ?? null,
-        historyFromMs: range ? new Date(range.firstTimestampMs) : null,
+        historyFromMs: range?.firstTimestampMs ? new Date(range.firstTimestampMs) : null,
         lastSyncedAt: new Date(),
       },
       update: {
         ...(newest ? { lastCheckpoint: newest.checkpoint, lastDigest: newest.digest } : {}),
-        ...(range ? { historyFromMs: new Date(range.firstTimestampMs) } : {}),
+        ...(range?.firstTimestampMs ? { historyFromMs: new Date(range.firstTimestampMs) } : {}),
         lastSyncedAt: new Date(),
       },
     });

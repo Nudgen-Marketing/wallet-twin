@@ -45,7 +45,8 @@ export interface SuiTransaction {
 
 export interface HistoryRange {
   firstCheckpoint: number;
-  firstTimestampMs: number;
+  /** Null when the node's range starts at genesis, which has no timestamp. */
+  firstTimestampMs: number | null;
   lastCheckpoint: number;
   lastTimestampMs: number;
 }

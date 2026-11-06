@@ -360,10 +360,11 @@ export function createTatumSuiGraphQL({ url, apiKey, http }: SuiGraphQLClientCon
       const filters = addressFiltered ? ["affectedAddress"] : null;
       const data = await query(HISTORY_RANGE_QUERY, { filters }, rangeResponseSchema);
       const { first, last } = data.serviceConfig.availableRange;
-      if (!first?.timestamp || !last?.timestamp) return null;
+      // The chain tip is what callers need; the unfiltered range starts at genesis (no timestamp).
+      if (!last?.timestamp) return null;
       return {
-        firstCheckpoint: first.sequenceNumber,
-        firstTimestampMs: Date.parse(first.timestamp),
+        firstCheckpoint: first?.sequenceNumber ?? 0,
+        firstTimestampMs: first?.timestamp ? Date.parse(first.timestamp) : null,
         lastCheckpoint: last.sequenceNumber,
         lastTimestampMs: Date.parse(last.timestamp),
       };

@@ -135,6 +135,36 @@ describe("TatumSuiGraphQL.historyRange / coinInfo", () => {
     });
   });
 
+  test("still returns the chain tip when the first checkpoint has no timestamp (unfiltered range starts at genesis)", async () => {
+    const { http } = fakeHttp({
+      data: {
+        serviceConfig: {
+          availableRange: {
+            first: { sequenceNumber: 0, timestamp: null },
+            last: { sequenceNumber: 342311820, timestamp: "2026-11-06T15:00:16.163Z" },
+          },
+        },
+      },
+    });
+    const client = createTatumSuiGraphQL({ url: "https://tatum.test/graphql", http });
+
+    await expect(client.historyRange({ addressFiltered: false })).resolves.toEqual({
+      firstCheckpoint: 0,
+      firstTimestampMs: null,
+      lastCheckpoint: 342311820,
+      lastTimestampMs: Date.parse("2026-11-06T15:00:16.163Z"),
+    });
+  });
+
+  test("returns null when the chain tip is unknown", async () => {
+    const { http } = fakeHttp({
+      data: { serviceConfig: { availableRange: { first: { sequenceNumber: 0, timestamp: null }, last: null } } },
+    });
+    const client = createTatumSuiGraphQL({ url: "https://tatum.test/graphql", http });
+
+    await expect(client.historyRange({ addressFiltered: false })).resolves.toBeNull();
+  });
+
   test("normalizes the coin type and returns metadata", async () => {
     const { http, calls } = fakeHttp(fixture("coin-metadata-sui"));
     const client = createTatumSuiGraphQL({ url: "https://tatum.test/graphql", http });
