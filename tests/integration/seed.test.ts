@@ -32,24 +32,29 @@ const T0 = Date.parse("2026-10-02T10:00:00Z");
 
 describe("seedDemoTwins", () => {
   test("syncs and publishes missing demo twins, then skips them once seeded", async () => {
-    const [scalper, saver] = demoWallets();
+    const wallets = demoWallets();
+    const saver = wallets[wallets.length - 1];
+    const others = wallets.filter((wallet) => wallet !== saver);
     FAILING.add(saver.address);
 
     const first = await seedDemoTwins({ onlyMissing: true });
 
-    expect(first).toEqual([
-      expect.objectContaining({ address: scalper.address, outcome: "seeded" }),
-      expect.objectContaining({ address: saver.address, outcome: "failed", detail: "Tatum unavailable" }),
-    ]);
+    expect(first).toEqual(
+      wallets.map((wallet) =>
+        wallet === saver
+          ? expect.objectContaining({ address: saver.address, outcome: "failed", detail: "Tatum unavailable" })
+          : expect.objectContaining({ address: wallet.address, outcome: "seeded" }),
+      ),
+    );
     const board = await getLeaderboard();
-    expect(board.map((row) => row.address)).toContain(scalper.address);
+    for (const wallet of others) expect(board.map((row) => row.address)).toContain(wallet.address);
     expect(board.map((row) => row.address)).not.toContain(saver.address);
 
     FAILING.clear();
     runSync.mockClear();
     const second = await seedDemoTwins({ onlyMissing: true });
 
-    expect(second.map((result) => result.outcome)).toEqual(["skipped", "seeded"]);
+    expect(second.map((result) => result.outcome)).toEqual(wallets.map((wallet) => (wallet === saver ? "seeded" : "skipped")));
     expect(runSync).toHaveBeenCalledTimes(1);
     expect(runSync).toHaveBeenCalledWith(expect.any(String), saver.address);
   });
@@ -59,7 +64,7 @@ describe("seedDemoTwins", () => {
 
     const results = await seedDemoTwins({ onlyMissing: false });
 
-    expect(results.map((result) => result.outcome)).toEqual(["seeded", "seeded"]);
-    expect(runSync).toHaveBeenCalledTimes(2);
+    expect(results.map((result) => result.outcome)).toEqual(demoWallets().map(() => "seeded"));
+    expect(runSync).toHaveBeenCalledTimes(demoWallets().length);
   });
 });

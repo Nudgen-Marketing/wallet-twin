@@ -9,6 +9,11 @@ import { env } from "@/lib/env";
  */
 const DEFAULT_DEMO_WALLETS: { address: string; label: string }[] = [
   {
+    // The builder's own wallet, published with the owner's consent (2026-11-06).
+    address: "0x7383b5e076553f79822374baca843c8fac02d510fb0f4ab344fc7ab591be94a7",
+    label: "The patient DeFi farmer",
+  },
+  {
     address: "0x854b8c1993e4396468f166a628e9926a2b18b398f104d8d3046c67bc32a2c940",
     label: "The MAGMA scalper",
   },
