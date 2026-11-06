@@ -4,6 +4,8 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
+import { splitBold } from "@/lib/twin/chat-format";
+
 /** Distance from the bottom, in px, within which the log keeps following new text. */
 const FOLLOW_THRESHOLD_PX = 120;
 
@@ -97,7 +99,7 @@ export function TwinChat({ api, audience, suggestions, twinName }: TwinChatProps
               {message.role === "user" ? (audience === "owner" ? "You" : "Visitor") : "Twin"}
             </p>
             <div className={`mt-1 whitespace-pre-wrap leading-relaxed ${message.role === "user" ? "text-ink-soft" : "text-lg"}`}>
-              {message.parts.map((part, index) => (part.type === "text" ? <span key={index}>{part.text}</span> : null))}
+              {message.parts.map((part, index) => (part.type === "text" ? <ChatText key={index} text={part.text} /> : null))}
             </div>
           </article>
         ))}
@@ -135,5 +137,22 @@ export function TwinChat({ api, audience, suggestions, twinName }: TwinChatProps
         Not financial advice. Answers come from on-chain data and memories, and can be wrong.
       </p>
     </section>
+  );
+}
+
+/** Renders a reply with its `**bold**` labels as <strong>, keeping everything else as plain text. */
+function ChatText({ text }: { text: string }) {
+  return (
+    <span>
+      {splitBold(text).map((segment, index) =>
+        segment.bold ? (
+          <strong key={index} className="font-semibold text-ink">
+            {segment.text}
+          </strong>
+        ) : (
+          <span key={index}>{segment.text}</span>
+        ),
+      )}
+    </span>
   );
 }
