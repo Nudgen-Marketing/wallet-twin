@@ -1,5 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { type GrpcExecutedTransaction, isRetryableGrpcError, mapGrpcTransaction } from "@/lib/tatum/sui-grpc";
+import {
+  type GrpcExecutedTransaction,
+  isBelowEarliestCheckpointError,
+  isRetryableGrpcError,
+  mapGrpcTransaction,
+} from "@/lib/tatum/sui-grpc";
 
 const ADDRESS = "0x854b8c1993e4396468f166a628e9926a2b18b398f104d8d3046c67bc32a2c940";
 const SUI = "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI";
@@ -82,5 +87,21 @@ describe("isRetryableGrpcError", () => {
     expect(isRetryableGrpcError(Object.assign(new Error("bad key"), { code: "UNAUTHENTICATED" }))).toBe(false);
     expect(isRetryableGrpcError(new Error("invalid filter"))).toBe(false);
     expect(isRetryableGrpcError("429")).toBe(false);
+  });
+});
+
+describe("isBelowEarliestCheckpointError", () => {
+  test("recognizes the node's 'below earliest available' error, which ends a backward history scan", () => {
+    const error = Object.assign(
+      new Error("requested data below earliest available; lowest available checkpoint is 237661232"),
+      { code: "OUT_OF_RANGE" },
+    );
+    expect(isBelowEarliestCheckpointError(error)).toBe(true);
+  });
+
+  test("does not swallow other errors", () => {
+    expect(isBelowEarliestCheckpointError(new Error("Received HTTP status code 402"))).toBe(false);
+    expect(isBelowEarliestCheckpointError(Object.assign(new Error("busy"), { code: "UNAVAILABLE" }))).toBe(false);
+    expect(isBelowEarliestCheckpointError("below earliest available")).toBe(false);
   });
 });

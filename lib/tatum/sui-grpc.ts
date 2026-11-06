@@ -164,6 +164,15 @@ export function isRetryableGrpcError(error: unknown): boolean {
   );
 }
 
+/**
+ * The node only indexes from a fixed checkpoint (Jan 2026). A backward scan for a wallet older
+ * than that fails with "below earliest available" once it walks past the start: that is the end
+ * of reachable history, not an error.
+ */
+export function isBelowEarliestCheckpointError(error: unknown): boolean {
+  return error instanceof Error && /below earliest available/i.test(error.message);
+}
+
 export function createTatumSuiGrpc({
   host,
   apiKey,
@@ -223,10 +232,16 @@ export function createTatumSuiGrpc({
     const transactions: SuiTransaction[] = [];
     let lastCursor: Uint8Array | undefined;
     let endReason: number | undefined;
-    for await (const frame of call.responses) {
-      if (frame.transaction) transactions.push(mapGrpcTransaction(frame.transaction));
-      if (frame.watermark?.cursor) lastCursor = frame.watermark.cursor;
-      if (frame.end) endReason = frame.end.reason;
+    try {
+      for await (const frame of call.responses) {
+        if (frame.transaction) transactions.push(mapGrpcTransaction(frame.transaction));
+        if (frame.watermark?.cursor) lastCursor = frame.watermark.cursor;
+        if (frame.end) endReason = frame.end.reason;
+      }
+    } catch (error: unknown) {
+      // Keep what this page already streamed and stop: older history is outside the node's index.
+      if (backward && isBelowEarliestCheckpointError(error)) return { transactions, nextCursor: null };
+      throw error;
     }
 
     // Item/scan limits mean "more may follow"; every other end reason is a hard stop.
