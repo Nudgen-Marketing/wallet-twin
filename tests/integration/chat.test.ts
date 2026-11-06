@@ -110,4 +110,32 @@ describe("parseChatRequest", () => {
 
     expect("messages" in parsed && parsed.messages.map((message) => message.role)).toEqual(["user"]);
   });
+
+  test("keeps only the text of earlier replies, so a follow-up never replays a signed thinking block", async () => {
+    const reply = {
+      id: "a1",
+      role: "assistant",
+      parts: [
+        { type: "step-start" },
+        { type: "reasoning", text: "", state: "done", providerMetadata: { anthropic: { signature: "sig" } } },
+        { type: "text", text: "We win 42% of trades.", state: "done" },
+      ],
+    };
+
+    const parsed = await parseChatRequest({ messages: [userMessage("How do I trade?"), reply, userMessage("And my best trade?")] });
+
+    expect("messages" in parsed && parsed.messages.map((message) => message.parts)).toEqual([
+      [{ type: "text", text: "How do I trade?" }],
+      [{ type: "text", text: "We win 42% of trades.", state: "done" }],
+      [{ type: "text", text: "And my best trade?" }],
+    ]);
+  });
+
+  test("drops an earlier reply that has no text left", async () => {
+    const empty = { id: "a1", role: "assistant", parts: [{ type: "step-start" }] };
+
+    const parsed = await parseChatRequest({ messages: [userMessage("hi there"), empty, userMessage("hello again")] });
+
+    expect("messages" in parsed && parsed.messages.map((message) => message.role)).toEqual(["user", "user"]);
+  });
 });

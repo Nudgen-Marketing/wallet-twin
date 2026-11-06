@@ -33,6 +33,18 @@ export async function parseChatRequest(body: unknown): Promise<ChatRequest> {
   if (!userText) return { error: "Say something to your twin first." };
   if (userText.length > MAX_USER_MESSAGE_CHARS) return { error: "That message is too long." };
   // Clients can't smuggle in system/assistant instructions beyond normal turns.
-  const turns = messages.filter((message) => message.role === "user" || message.role === "assistant");
+  const turns = messages
+    .filter((message) => message.role === "user" || message.role === "assistant")
+    .map(textOnly)
+    .filter((message) => message.parts.length > 0);
   return { messages: turns.slice(-MAX_HISTORY_MESSAGES), userText };
+}
+
+/**
+ * Earlier turns go back to the model as plain text. Replaying a reply's signed thinking block
+ * (or any non-text part a client sends) makes the follow-up request fail, and the model only
+ * needs what was said.
+ */
+function textOnly(message: UIMessage): UIMessage {
+  return { ...message, parts: message.parts.filter((part) => part.type === "text" && part.text.trim().length > 0) };
 }
